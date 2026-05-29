@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QR Barcode Generator — Staging Hub</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --bg: #f8fafc;
+            --surface: #ffffff;
+            --border: #e2e8f0;
+            --primary: #3b82f6;
+            --success: #10b981;
+            --warn: #f59e0b;
+            --error: #ef4444;
+            --purple: #8b5cf6;
+            --muted: #64748b;
+            --text: #0f172a;
+            --text2: #475569;
+        }
+
+        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+        /* ── HEADER ─────────────────── */
+        header {
+            background: #ffffff; border-bottom: 1px solid var(--border);
+            padding: 16px 28px; display: flex; align-items: center;
+            justify-content: space-between; position: sticky; top: 0;
+            z-index: 50; box-shadow: 0 1px 3px rgba(0,0,0,.06);
+        }
+        .header-left { display: flex; align-items: center; gap: 14px; }
+        .header-left .icon { font-size: 28px; }
+        .header-left h1 { font-size: 20px; font-weight: 900; color: var(--text); }
+        .header-left .sub { font-size: 11px; color: var(--muted); letter-spacing: .5px; }
+        .nav-links { display: flex; gap: 12px; }
+        .nav-links a {
+            text-decoration: none; font-size: 12px; font-weight: 700;
+            padding: 8px 16px; border-radius: 8px; color: var(--text2);
+            background: var(--bg); border: 1px solid var(--border);
+            transition: all .2s;
+        }
+        .nav-links a:hover { background: var(--primary); color: #fff; border-color: var(--primary); }
+
+        /* ── MAIN ──────────────────── */
+        .main-content { max-width: 1100px; margin: 0 auto; padding: 24px; }
+
+        /* ── FORM CARD ─────────────── */
+        .form-card {
+            background: var(--surface); border: 1px solid var(--border);
+            border-radius: 16px; padding: 28px; margin-bottom: 24px;
+            box-shadow: 0 1px 3px rgba(0,0,0,.04);
+        }
+        .form-title { font-size: 16px; font-weight: 800; margin-bottom: 20px; display: flex; align-items: center; gap: 8px; }
+        .form-grid {
+            display: grid; grid-template-columns: 1fr 1fr 1fr 1fr auto;
+            gap: 16px; align-items: end;
+        }
+        .form-group label {
+            display: block; font-size: 11px; font-weight: 700; color: var(--muted);
+            text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px;
+        }
+        .form-group select, .form-group input {
+            width: 100%; padding: 10px 14px; border: 1.5px solid var(--border);
+            border-radius: 10px; font-family: 'Inter', sans-serif; font-size: 14px;
+            font-weight: 600; color: var(--text); background: var(--bg);
+            transition: border-color .2s;
+        }
+        .form-group select:focus, .form-group input:focus {
+            outline: none; border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(59,130,246,.15);
+        }
+        .btn-generate {
+            background: var(--primary); color: #fff; border: none;
+            padding: 10px 28px; border-radius: 10px; font-family: 'Inter', sans-serif;
+            font-size: 14px; font-weight: 800; cursor: pointer;
+            transition: all .2s; white-space: nowrap;
+        }
+        .btn-generate:hover { background: #2563eb; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(59,130,246,.3); }
+
+        /* ── RESULTS ────────────────── */
+        .results-header {
+            display: flex; align-items: center; justify-content: space-between;
+            margin-bottom: 16px;
+        }
+        .results-title { font-size: 14px; font-weight: 800; color: var(--text); display: flex; align-items: center; gap: 8px; }
+        .results-count { font-size: 12px; color: var(--muted); background: var(--bg); padding: 4px 12px; border-radius: 6px; font-weight: 600; }
+        .btn-print {
+            background: var(--success); color: #fff; border: none;
+            padding: 10px 24px; border-radius: 10px; font-family: 'Inter', sans-serif;
+            font-size: 13px; font-weight: 800; cursor: pointer;
+            transition: all .2s; display: flex; align-items: center; gap: 6px;
+        }
+        .btn-print:hover { background: #059669; transform: translateY(-1px); }
+
+        .qr-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+        }
+        .qr-card {
+            background: var(--surface); border: 2px solid var(--border);
+            border-radius: 12px; padding: 16px; text-align: center;
+            transition: all .2s; display: flex; flex-direction: column;
+            align-items: center; gap: 10px;
+        }
+        .qr-card:hover { border-color: var(--primary); box-shadow: 0 4px 12px rgba(59,130,246,.1); }
+        .qr-card canvas, .qr-card img { border-radius: 4px; width: 5cm !important; height: 5cm !important; margin: 0 auto; display: block; object-fit: contain; }
+        .qr-card canvas { display: none !important; } /* QRCode.js renders both canvas + img; hide canvas to avoid double */
+        .qr-label {
+            font-size: 18px; font-weight: 900; color: var(--text);
+            letter-spacing: 1px; font-family: 'Inter', sans-serif;
+            background: #f1f5f9; padding: 6px 16px; border-radius: 8px;
+            border: 1.5px solid var(--border); width: 100%;
+        }
+        .qr-type-badge {
+            font-size: 9px; font-weight: 800; text-transform: uppercase;
+            letter-spacing: 1px; padding: 3px 10px; border-radius: 5px;
+        }
+        .qr-type-badge.trolley { background: #ede9fe; color: #7c3aed; }
+        .qr-type-badge.floor { background: #fef3c7; color: #b45309; }
+        .qr-type-badge.area { background: #dbeafe; color: #2563eb; }
+        .qr-type-badge.grid { background: #d1fae5; color: #059669; }
+
+        .empty-state {
+            text-align: center; padding: 60px 20px; color: var(--muted);
+        }
+        .empty-state .emoji { font-size: 48px; margin-bottom: 12px; }
+        .empty-state .msg { font-size: 14px; font-weight: 500; }
+
+        /* ── PRINT STYLES ──────────── */
+        @media print {
+            * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+            body { background: #fff !important; margin: 0 !important; padding: 0 !important; }
+            header, .form-card, .results-header, .nav-links, .empty-state { display: none !important; }
+            .main-content { max-width: 100%; padding: 0; margin: 0; }
+            .qr-grid {
+                display: block !important;
+                padding: 0 !important;
+                margin: 0 !important;
+            }
+            .qr-card {
+                page-break-after: always !important;
+                border: none !important;
+                border-radius: 0 !important;
+                width: 100% !important;
+                height: 100vh !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                display: flex !important;
+                flex-direction: column !important;
+                align-items: center !important;
+                justify-content: center !important;
+                box-shadow: none !important;
+                gap: 0 !important;
+            }
+            .qr-card:last-child {
+                page-break-after: auto !important;
+            }
+            .qr-card canvas, .qr-card img { 
+                width: 10cm !important; 
+                height: 10cm !important; 
+                min-width: 10cm !important;
+                min-height: 10cm !important;
+                max-width: 10cm !important;
+                max-height: 10cm !important;
+                margin: 0 !important;
+                display: block !important;
+                object-fit: contain !important;
+                border: 2px solid #000 !important;
+            }
+            .qr-card canvas { display: none !important; }
+            .qr-label {
+                font-size: 24px !important;
+                background: none !important;
+                border: none !important;
+                padding: 12px 0 0 0 !important;
+                font-weight: 900 !important;
+                color: #000 !important;
+                text-align: center !important;
+                width: 10cm !important;
+            }
+            .qr-type-badge { display: none !important; }
+        }
+
+        @media (max-width: 768px) {
+            .form-grid { grid-template-columns: 1fr 1fr; }
+            .qr-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+        @media (max-width: 500px) {
+            .form-grid { grid-template-columns: 1fr; }
+            .qr-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="header-left">
+            <span class="icon">📱</span>
+            <div><h1>QR Barcode Generator</h1><div class="sub">Generate & print stickers for trolleys, floors & areas</div></div>
+        </div>
+        <div class="nav-links">
+            <a href="/">🏭 Worker Portal</a>
+            <a href="/dashboard">📊 Dashboard</a>
+        </div>
+    </header>
+
+    <div class="main-content">
+        <div class="form-card">
+            <div class="form-title">⚙️ Configure Barcodes</div>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>Type</label>
+                    <select id="barcodeType" onchange="updatePreview()">
+                        <option value="TRL">🛒 Trolley (TRL-)</option>
+                        <option value="G1">🏢 Floor G1 (G1_BL)</option>
+                        <option value="G2">🏢 Floor G2 (G2_BL)</option>
+                        <option value="GRD">📍 Grid Area (GRD-)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Prefix (auto)</label>
+                    <input type="text" id="prefix" value="TRL-" readonly style="background:#f1f5f9;color:var(--muted);">
+                </div>
+                <div class="form-group">
+                    <label>Start Number</label>
+                    <input type="number" id="startNum" value="1" min="1" max="999">
+                </div>
+                <div class="form-group">
+                    <label>End Number</label>
+                    <input type="number" id="endNum" value="20" min="1" max="999">
+                </div>
+                <div class="form-group">
+                    <button class="btn-generate" onclick="generateCodes()">Generate ▶</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Custom entries section -->
+        <div class="form-card">
+            <div class="form-title">✏️ Custom Barcodes (Optional)</div>
+            <div style="display:flex;gap:12px;align-items:end;">
+                <div class="form-group" style="flex:1;">
+                    <label>Enter custom IDs (comma-separated)</label>
+                    <input type="text" id="customIds" placeholder="e.g. G1_BL1, G2_BL5, TRL-SPECIAL-01">
+                </div>
+                <div class="form-group">
+                    <button class="btn-generate" onclick="generateCustom()" style="background:var(--purple);">Add Custom ▶</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="resultsSection" style="display:none;">
+            <div class="results-header">
+                <div>
+                    <div class="results-title">📋 Generated QR Codes <span class="results-count" id="resultsCount">0</span></div>
+                </div>
+                <button class="btn-print" onclick="window.print()">🖨️ Print Stickers</button>
+            </div>
+            <div class="qr-grid" id="qrGrid"></div>
+        </div>
+
+        <div id="emptyState" class="empty-state">
+            <div class="emoji">📱</div>
+            <div class="msg">Configure settings above and click <strong>Generate</strong> to create QR code stickers.</div>
+            <div style="margin-top:8px;font-size:12px;color:var(--muted);">Workers can scan these QR codes with HHD devices.</div>
+        </div>
+    </div>
+
+    <script>
+        function updatePreview() {
+            var type = document.getElementById('barcodeType').value;
+            var prefixMap = { 'TRL': 'TRL-', 'G1': 'G1_BL', 'G2': 'G2_BL', 'GRD': 'GRD-' };
+            document.getElementById('prefix').value = prefixMap[type] || type + '-';
+        }
+
+        function padNum(n, type) {
+            // TRL uses 3-digit padding (TRL-001), G1/G2/GRD use no padding
+            if (type === 'TRL') return String(n).padStart(3, '0');
+            return String(n);
+        }
+
+        function getTypeBadgeClass(id) {
+            if (id.startsWith('TRL')) return 'trolley';
+            if (id.startsWith('G1') || id.startsWith('G2')) return 'floor';
+            if (id.startsWith('GRD')) return 'grid';
+            return 'area';
+        }
+
+        function getTypeLabel(id) {
+            if (id.startsWith('TRL')) return 'Trolley';
+            if (id.startsWith('G1')) return 'Floor G1';
+            if (id.startsWith('G2')) return 'Floor G2';
+            if (id.startsWith('GRD')) return 'Grid';
+            return 'Other';
+        }
+
+        function generateCodes() {
+            var type = document.getElementById('barcodeType').value;
+            var prefix = document.getElementById('prefix').value;
+            var start = parseInt(document.getElementById('startNum').value) || 1;
+            var end = parseInt(document.getElementById('endNum').value) || 1;
+
+            if (end < start) { alert('End number must be ≥ Start number'); return; }
+            if (end - start > 200) { alert('Maximum 200 barcodes at a time'); return; }
+
+            var ids = [];
+            for (var i = start; i <= end; i++) {
+                ids.push(prefix + padNum(i, type));
+            }
+
+            renderQRCodes(ids);
+        }
+
+        function generateCustom() {
+            var raw = document.getElementById('customIds').value.trim();
+            if (!raw) { alert('Enter at least one ID'); return; }
+            var ids = raw.split(',').map(function(s) { return s.trim(); }).filter(function(s) { return s.length > 0; });
+            renderQRCodes(ids);
+        }
+
+        function renderQRCodes(ids) {
+            var grid = document.getElementById('qrGrid');
+            grid.innerHTML = '';
+            document.getElementById('emptyState').style.display = 'none';
+            document.getElementById('resultsSection').style.display = 'block';
+            document.getElementById('resultsCount').textContent = ids.length + ' codes';
+
+            ids.forEach(function(id) {
+                var card = document.createElement('div');
+                card.className = 'qr-card';
+
+                // Type badge
+                var badge = document.createElement('span');
+                badge.className = 'qr-type-badge ' + getTypeBadgeClass(id);
+                badge.textContent = getTypeLabel(id);
+                card.appendChild(badge);
+
+                // QR container
+                var qrDiv = document.createElement('div');
+                qrDiv.style.lineHeight = '0';
+                card.appendChild(qrDiv);
+
+                // Generate QR
+                new QRCode(qrDiv, {
+                    text: id,
+                    width: 400,
+                    height: 400,
+                    colorDark: "#0f172a",
+                    colorLight: "#ffffff",
+                    correctLevel: QRCode.CorrectLevel.H
+                });
+
+                // Bold label below QR
+                var label = document.createElement('div');
+                label.className = 'qr-label';
+                label.textContent = id;
+                card.appendChild(label);
+
+                grid.appendChild(card);
+            });
+        }
+    </script>
+</body>
+</html>

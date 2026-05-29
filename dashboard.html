@@ -1,0 +1,1209 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Staging Live Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
+        rel="stylesheet">
+    <style>
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        :root {
+            --bg: #f8fafc;
+            --surface: #ffffff;
+            --border: #e2e8f0;
+            --primary: #3b82f6;
+            --success: #10b981;
+            --warn: #f59e0b;
+            --error: #ef4444;
+            --purple: #8b5cf6;
+            --muted: #64748b;
+            --text: #0f172a;
+            --text2: #475569;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+        }
+
+        /* ── HEADER ─────────────────── */
+        header {
+            background: #ffffff;
+            border-bottom: 1px solid var(--border);
+            padding: 16px 28px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, .06);
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .header-left .icon {
+            font-size: 28px;
+        }
+
+        .header-left h1 {
+            font-size: 20px;
+            font-weight: 900;
+            color: var(--text);
+        }
+
+        .header-left .sub {
+            font-size: 11px;
+            color: var(--muted);
+            letter-spacing: .5px;
+        }
+
+        .live-pulse {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(16, 185, 129, .08);
+            border: 1px solid rgba(16, 185, 129, .25);
+            border-radius: 20px;
+            padding: 6px 16px;
+            font-size: 11px;
+            font-weight: 800;
+            color: var(--success);
+            letter-spacing: 1px;
+        }
+
+        .pulse-dot {
+            width: 8px;
+            height: 8px;
+            background: var(--success);
+            border-radius: 50%;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1;
+                transform: scale(1)
+            }
+
+            50% {
+                opacity: .3;
+                transform: scale(.6)
+            }
+        }
+
+        .refresh-info {
+            font-size: 11px;
+            color: var(--muted);
+            text-align: right;
+        }
+
+        .refresh-info span {
+            color: var(--text2);
+            font-weight: 600;
+        }
+
+        /* ── SUMMARY BAR ────────────── */
+        /* Now 9 cards: Total, Spiral, Area Done, Area Pend, Trolley Done, Trolley Pend, Grid Done, Grid Pend, On Belt */
+        .summary-bar {
+            display: grid;
+            grid-template-columns: repeat(9, 1fr);
+            gap: 10px;
+            padding: 16px 24px 0;
+        }
+
+        .stat-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 14px 14px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: transform .2s, box-shadow .2s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, .08);
+        }
+
+        .stat-icon {
+            font-size: 22px;
+        }
+
+        .stat-val {
+            font-size: 24px;
+            font-weight: 900;
+            color: var(--text);
+            line-height: 1;
+        }
+
+        .stat-lbl {
+            font-size: 10px;
+            color: var(--muted);
+            margin-top: 2px;
+        }
+
+        .c-total {
+            border-color: rgba(59, 130, 246, .3);
+        }
+
+        .c-area {
+            border-color: rgba(34, 197, 94, .3);
+        }
+
+        .c-area-pend {
+            border-color: rgba(234, 88, 12, .4);
+            background: #fff7ed;
+        }
+
+        .c-grid {
+            border-color: rgba(34, 197, 94, .3);
+        }
+
+        .c-grid-pend {
+            border-color: rgba(220, 38, 38, .4);
+            background: #fef2f2;
+        }
+
+        .c-trolley {
+            border-color: rgba(139, 92, 246, .3);
+        }
+
+        .c-trolley-pend {
+            border-color: rgba(234, 88, 12, .4);
+            background: #fff7ed;
+        }
+
+        .c-spiral {
+            border-color: rgba(13, 71, 161, .35);
+            background: #eff6ff;
+        }
+
+        .c-belt {
+            border-color: rgba(251, 146, 60, .4);
+            background: #fffbeb;
+        }
+
+        /* ── MAIN TABLE ─────────────── */
+        .main {
+            padding: 20px 24px 40px;
+        }
+
+        .section-title {
+            font-size: 11px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: var(--muted);
+            margin-bottom: 12px;
+            margin-top: 24px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section-title::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: var(--border);
+        }
+
+        .grid-table-wrap {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+
+        .grid-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+
+        .grid-table thead th {
+            background: #f1f5f9;
+            color: var(--muted);
+            font-weight: 700;
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            padding: 12px 16px;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            z-index: 2;
+        }
+
+        .grid-table tbody tr {
+            cursor: pointer;
+            transition: background .15s;
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        .grid-table tbody tr:last-child {
+            border-bottom: none;
+        }
+
+        .grid-table tbody tr:hover {
+            background: #f0f9ff;
+        }
+
+        .grid-table td {
+            padding: 12px 16px;
+            vertical-align: middle;
+        }
+
+        .grid-table .grid-name {
+            font-weight: 800;
+            color: var(--text);
+            font-size: 14px;
+        }
+
+        .grid-table .count-cell {
+            font-weight: 900;
+            font-size: 16px;
+        }
+
+        .grid-table .trolley-cell {
+            font-size: 12px;
+            color: var(--text2);
+        }
+
+        .grid-table .trolley-cell.active {
+            color: var(--purple);
+            font-weight: 700;
+        }
+
+        .grid-table .trolley-cell.none {
+            color: #cbd5e1;
+        }
+
+        .badge {
+            display: inline-block;
+            font-size: 9px;
+            font-weight: 800;
+            padding: 3px 8px;
+            border-radius: 5px;
+            text-transform: uppercase;
+            letter-spacing: .3px;
+        }
+
+        .badge-done {
+            background: #d1fae5;
+            color: #059669;
+        }
+
+        .badge-pending {
+            background: #fef3c7;
+            color: #b45309;
+        }
+
+        .badge-zero {
+            background: #f1f5f9;
+            color: #94a3b8;
+        }
+
+        .empty-row {
+            text-align: center;
+            padding: 30px;
+            color: var(--muted);
+            font-size: 13px;
+        }
+
+        .error-banner {
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            border-radius: 10px;
+            padding: 12px 16px;
+            color: var(--error);
+            font-size: 13px;
+            margin: 16px 24px 0;
+            display: none;
+        }
+
+        /* ── MODAL ───────────────────── */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, .4);
+            backdrop-filter: blur(4px);
+            z-index: 500;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity .3s;
+        }
+
+        .modal-overlay.open {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .modal-panel {
+            position: fixed;
+            top: 0;
+            right: -100%;
+            width: min(900px, 95vw);
+            height: 100%;
+            background: #ffffff;
+            border-left: 1px solid var(--border);
+            z-index: 510;
+            transition: right .35s cubic-bezier(.4, 0, .2, 1);
+            display: flex;
+            flex-direction: column;
+            box-shadow: -8px 0 30px rgba(0, 0, 0, .12);
+        }
+
+        .modal-panel.open {
+            right: 0;
+        }
+
+        .modal-header {
+            padding: 18px 24px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: #f8fafc;
+            flex-shrink: 0;
+        }
+
+        .modal-header h2 {
+            font-size: 18px;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--text);
+        }
+
+        .modal-header .grid-badge {
+            background: rgba(59, 130, 246, .1);
+            color: var(--primary);
+            font-size: 11px;
+            font-weight: 700;
+            padding: 4px 10px;
+            border-radius: 6px;
+        }
+
+        .modal-close {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            color: var(--text2);
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            font-size: 18px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all .2s;
+        }
+
+        .modal-close:hover {
+            background: #fef2f2;
+            color: var(--error);
+            border-color: #fecaca;
+        }
+
+        .modal-summary {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            padding: 16px 24px;
+            background: #f8fafc;
+            border-bottom: 1px solid var(--border);
+            flex-shrink: 0;
+        }
+
+        .modal-stat {
+            text-align: center;
+            background: var(--surface);
+            border-radius: 10px;
+            padding: 12px 8px;
+            border: 1px solid var(--border);
+        }
+
+        .modal-stat .icon {
+            font-size: 20px;
+            margin-bottom: 4px;
+        }
+
+        .modal-stat .val {
+            font-size: 22px;
+            font-weight: 900;
+            line-height: 1;
+        }
+
+        .modal-stat .lbl {
+            font-size: 9px;
+            color: var(--muted);
+            margin-top: 4px;
+            text-transform: uppercase;
+            letter-spacing: .8px;
+            font-weight: 600;
+        }
+
+        .modal-stat.s-total .val {
+            color: var(--primary);
+        }
+
+        .modal-stat.s-area .val {
+            color: #0d9488;
+        }
+
+        .modal-stat.s-trl .val {
+            color: #7c3aed;
+        }
+
+        .modal-stat.s-grid .val {
+            color: #059669;
+        }
+
+        .modal-body {
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .modal-loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 50px;
+            color: var(--muted);
+            font-size: 14px;
+            gap: 10px;
+        }
+
+        .modal-spinner {
+            width: 18px;
+            height: 18px;
+            border: 2.5px solid var(--border);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin .6s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg)
+            }
+        }
+
+        .detail-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+        }
+
+        .detail-table thead {
+            position: sticky;
+            top: 0;
+            z-index: 2;
+        }
+
+        .detail-table th {
+            background: #f8fafc;
+            color: var(--muted);
+            font-weight: 700;
+            font-size: 9px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            padding: 10px 12px;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+            white-space: nowrap;
+        }
+
+        .detail-table td {
+            padding: 10px 12px;
+            border-bottom: 1px solid #f1f5f9;
+            color: var(--text2);
+        }
+
+        .detail-table tbody tr {
+            transition: background .15s;
+        }
+
+        .detail-table tbody tr:hover {
+            background: #f8fafc;
+        }
+
+        .detail-table .bag-id-cell {
+            font-weight: 700;
+            color: var(--text);
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            white-space: normal;
+            word-break: break-all;
+            min-width: 160px;
+            max-width: 220px;
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 9px;
+            font-weight: 800;
+            padding: 3px 8px;
+            border-radius: 5px;
+            text-transform: uppercase;
+        }
+
+        .status-badge.done {
+            background: #d1fae5;
+            color: #059669;
+        }
+
+        .status-badge.pending {
+            background: #f1f5f9;
+            color: #94a3b8;
+        }
+
+        .status-badge.synced {
+            background: #dbeafe;
+            color: #2563eb;
+        }
+
+        .ts-cell {
+            font-size: 10px;
+            color: var(--muted);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 50px;
+            color: var(--muted);
+            font-size: 14px;
+        }
+
+        .empty-state .emoji {
+            font-size: 36px;
+            margin-bottom: 10px;
+        }
+
+        /* ── SEARCH BAR IN MODAL ──── */
+        .modal-search {
+            padding: 12px 24px;
+            background: #ffffff;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-shrink: 0;
+        }
+
+        .modal-search input {
+            flex: 1;
+            padding: 10px 14px;
+            border: 2px solid var(--border);
+            border-radius: 10px;
+            font-size: 14px;
+            font-family: 'Inter', sans-serif;
+            font-weight: 600;
+            outline: none;
+            transition: border-color .2s, box-shadow .2s;
+            background: #f8fafc;
+        }
+
+        .modal-search input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, .15);
+            background: #fff;
+        }
+
+        .modal-search input::placeholder {
+            color: #94a3b8;
+            font-weight: 400;
+        }
+
+        .modal-search .search-icon {
+            font-size: 18px;
+            color: var(--muted);
+        }
+
+        .modal-search-result {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--muted);
+            white-space: nowrap;
+            min-width: 80px;
+        }
+
+        .modal-search-result.found {
+            color: var(--success);
+        }
+
+        .modal-search-result.not-found {
+            color: var(--error);
+        }
+
+        .detail-table tbody tr.highlight-row {
+            background: #fef9c3 !important;
+            outline: 2px solid #facc15;
+            outline-offset: -2px;
+        }
+
+        .detail-table tbody tr.highlight-row td {
+            color: var(--text) !important;
+            font-weight: 600;
+        }
+
+        @media (max-width: 1200px) {
+            .summary-bar {
+                grid-template-columns: repeat(5, 1fr);
+            }
+        }
+
+        @media (max-width: 900px) {
+            .summary-bar {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        @media (max-width: 600px) {
+            .summary-bar {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .summary-bar,
+            .main {
+                padding-left: 14px;
+                padding-right: 14px;
+            }
+
+            .modal-panel {
+                width: 100vw;
+            }
+
+            .modal-summary {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <div class="header-left">
+            <span class="icon">🏭</span>
+            <div>
+                <h1>Staging Live Dashboard</h1>
+                <div class="sub">Real-time area monitoring</div>
+            </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:16px;">
+            <div class="refresh-info">Last updated<br><span id="lastUpdate">—</span></div>
+            <div class="live-pulse">
+                <div class="pulse-dot"></div>LIVE
+            </div>
+        </div>
+    </header>
+
+    <div class="error-banner" id="errorBanner"></div>
+
+    <div class="summary-bar">
+        <div class="stat-card c-total" onclick="openFilteredDetail('total','📦 All Bags')" style="cursor:pointer;" title="Click to see all bags">
+            <span class="stat-icon">📦</span>
+            <div>
+                <div class="stat-val" id="s-total">—</div>
+                <div class="stat-lbl">Total Bags</div>
+            </div>
+        </div>
+        <div class="stat-card c-spiral" onclick="openFilteredDetail('spiral-scan','🔁 Spiral Bag Scan')" style="cursor:pointer;" title="Click to see all bags scanned at spiral">
+            <span class="stat-icon">🔁</span>
+            <div>
+                <div class="stat-val" id="s-spiral-bag" style="color:#0d47a1;">—</div>
+                <div class="stat-lbl">Spiral Bag Scan</div>
+            </div>
+        </div>
+        <div class="stat-card c-area" onclick="openFilteredDetail('area-done','📌 Area Put Done')" style="cursor:pointer;" title="Click to see area-put-done bags">
+            <span class="stat-icon">📌</span>
+            <div>
+                <div class="stat-val" id="s-area" style="color:#0d9488;">—</div>
+                <div class="stat-lbl">Area Put Done</div>
+            </div>
+        </div>
+        <div class="stat-card c-area-pend" onclick="openFilteredDetail('area-pending','⏳ Area Pendency')" style="cursor:pointer;" title="Click to see area-pending bags">
+            <span class="stat-icon">⏳</span>
+            <div>
+                <div class="stat-val" id="s-area-pend" style="color:#ea580c;">—</div>
+                <div class="stat-lbl">Area Pendency</div>
+            </div>
+        </div>
+        <div class="stat-card c-trolley" onclick="openFilteredDetail('trolley-done','🛒 Trolley Put Done')" style="cursor:pointer;" title="Click to see trolley put done bags">
+            <span class="stat-icon">🛒</span>
+            <div>
+                <div class="stat-val" id="s-trolley">—</div>
+                <div class="stat-lbl">Trolley Put Done</div>
+            </div>
+        </div>
+        <div class="stat-card c-trolley-pend" onclick="openFilteredDetail('trolley-pending','⏳ Trolley Pendency')" style="cursor:pointer;" title="Click to see trolley pending bags">
+            <span class="stat-icon">⏳</span>
+            <div>
+                <div class="stat-val" id="s-trolley-pend" style="color:#ea580c;">—</div>
+                <div class="stat-lbl">Trolley Pendency</div>
+            </div>
+        </div>
+        <div class="stat-card c-grid" onclick="openFilteredDetail('grid-done','✅ Grid Put Done')" style="cursor:pointer;" title="Click to see grid put done bags">
+            <span class="stat-icon">✅</span>
+            <div>
+                <div class="stat-val" id="s-grid">—</div>
+                <div class="stat-lbl">Grid Put Done</div>
+            </div>
+        </div>
+        <div class="stat-card c-grid-pend" onclick="openFilteredDetail('grid-pending','🚨 Grid Pendency')" style="cursor:pointer;" title="Click to see grid pending bags">
+            <span class="stat-icon">🚨</span>
+            <div>
+                <div class="stat-val" id="s-grid-pend" style="color:#dc2626;">—</div>
+                <div class="stat-lbl">Grid Pendency</div>
+            </div>
+        </div>
+        <div class="stat-card c-belt" onclick="openBeltDetail()" style="cursor:pointer;" title="Click to see bags on belt">
+            <span class="stat-icon">🔄</span>
+            <div>
+                <div class="stat-val" id="s-belt" style="color:#d97706;">—</div>
+                <div class="stat-lbl">On Belt</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="main">
+        <div class="section-title" id="natTitle">NATIONAL AREAS</div>
+        <div class="grid-table-wrap">
+            <table class="grid-table" id="nationalTable">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Grid</th>
+                        <th>Total Bags</th>
+                        <th>Area Put</th>
+                        <th>Trolley Put</th>
+                        <th>Grid Put</th>
+                        <th>Trolley</th>
+                    </tr>
+                </thead>
+                <tbody id="nationalBody">
+                    <tr>
+                        <td colspan="7" class="empty-row">Loading…</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="section-title" id="zonTitle">ZONAL AREAS</div>
+        <div class="grid-table-wrap">
+            <table class="grid-table" id="zonalTable">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Grid</th>
+                        <th>Total Bags</th>
+                        <th>Area Put</th>
+                        <th>Trolley Put</th>
+                        <th>Grid Put</th>
+                        <th>Trolley</th>
+                    </tr>
+                </thead>
+                <tbody id="zonalBody">
+                    <tr>
+                        <td colspan="7" class="empty-row">Loading…</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- DETAIL MODAL -->
+    <div class="modal-overlay" id="modalOverlay" onclick="closeModal()"></div>
+    <div class="modal-panel" id="modalPanel">
+        <div class="modal-header">
+            <h2>📍 <span id="modalGridName">—</span> <span class="grid-badge" id="modalBagCount">0 bags</span></h2>
+            <button class="modal-close" onclick="closeModal()" title="Close">✕</button>
+        </div>
+        <div class="modal-summary">
+            <div class="modal-stat s-total">
+                <div class="icon">📦</div>
+                <div class="val" id="ms-total">0</div>
+                <div class="lbl">Total</div>
+            </div>
+            <div class="modal-stat s-area">
+                <div class="icon">📌</div>
+                <div class="val" id="ms-area">0</div>
+                <div class="lbl">Area Put</div>
+            </div>
+            <div class="modal-stat s-trl">
+                <div class="icon">🛒</div>
+                <div class="val" id="ms-trolley">0</div>
+                <div class="lbl">Trolley Put</div>
+            </div>
+            <div class="modal-stat s-grid">
+                <div class="icon">✅</div>
+                <div class="val" id="ms-grid">0</div>
+                <div class="lbl">Grid Put</div>
+            </div>
+        </div>
+        <div class="modal-search" id="modalSearch">
+            <span class="search-icon">🔍</span>
+            <input type="text" id="modalSearchInput" placeholder="Scan or type Bag ID to search…" autocomplete="off" />
+            <span class="modal-search-result" id="modalSearchResult"></span>
+        </div>
+        <div class="modal-body" id="modalBody">
+            <div class="modal-loading">
+                <div class="modal-spinner"></div>Loading bag details…
+            </div>
+        </div>
+    </div>
+
+    <script>
+        var REFRESH_INTERVAL = 10000;
+
+        function fixFormatting() {
+            if (!confirm('Fix blue row formatting in Google Sheets?')) return;
+            fetch('/api/fix-formatting', { method: 'POST' })
+                .then(function (r) { return r.json(); })
+                .then(function (d) { alert(d.message || 'Done'); })
+                .catch(function (e) { alert('Error: ' + e.message); });
+        }
+
+        function manualBackup() {
+            if (!confirm('This will backup today\'s data to Drive and CLEAR Live_Staging + Trolley_Registry. Are you sure?')) return;
+            fetch('/api/manual-backup', { method: 'POST' })
+                    .then(function (r) { return r.json(); })
+                    .then(function (d) { alert(d.message || 'Done'); fetchDashboard(); })
+                    .catch(function (e) { alert('Error: ' + e.message); });
+        }
+
+        function fetchDashboard() {
+            fetch('/api/dashboard-data')
+                .then(function (r) { return r.json(); })
+                .then(renderDashboard)
+                .catch(function (e) {
+                    document.getElementById('errorBanner').style.display = 'block';
+                    document.getElementById('errorBanner').textContent = '⚠️ Failed to fetch: ' + e.message;
+                });
+        }
+
+        function renderDashboard(data) {
+            document.getElementById('errorBanner').style.display = 'none';
+            document.getElementById('lastUpdate').textContent = data.timestamp || '—';
+            var areas = data.areas || {};
+            var allAreas = data.allAreas || [];
+
+            var totTotal = 0, totArea = 0, totTrolley = 0, totGrid = 0;
+            for (var name in areas) {
+                var a = areas[name];
+                totTotal += (a.total || 0);
+                totArea += (a.areaPut || 0);
+                totTrolley += (a.trolleyPut || 0);
+                totGrid += (a.gridDone || 0);
+            }
+            document.getElementById('s-total').textContent = totTotal;
+            document.getElementById('s-spiral-bag').textContent = data.spiralScanTotal || 0;
+            document.getElementById('s-area').textContent = totArea;
+            document.getElementById('s-area-pend').textContent = totTotal - totArea;
+            document.getElementById('s-trolley').textContent = totTrolley;
+            document.getElementById('s-trolley-pend').textContent = totTotal - totTrolley;
+            document.getElementById('s-grid').textContent = totGrid;
+            document.getElementById('s-grid-pend').textContent = totTotal - totGrid;
+            document.getElementById('s-belt').textContent = data.conveyerOnly || 0;
+
+            var nationalAreas = allAreas.filter(function (a) { return a.areaType && a.areaType.toLowerCase().indexOf('national') !== -1; });
+            var zonalAreas = allAreas.filter(function (a) { return a.areaType && a.areaType.toLowerCase().indexOf('zonal') !== -1; });
+            if (allAreas.length === 0) {
+                var names = Object.keys(areas).sort();
+                names.forEach(function (n) { allAreas.push({ name: n, areaType: 'National' }); });
+                nationalAreas = allAreas;
+            }
+
+            renderTable('nationalBody', nationalAreas.length ? nationalAreas : allAreas, areas);
+            renderTable('zonalBody', zonalAreas, areas);
+
+            if (zonalAreas.length === 0) {
+                document.getElementById('zonTitle').style.display = 'none';
+                document.getElementById('zonalTable').parentElement.style.display = 'none';
+            } else {
+                document.getElementById('zonTitle').style.display = '';
+                document.getElementById('zonalTable').parentElement.style.display = '';
+            }
+        }
+
+        function renderTable(tbodyId, areaList, stats) {
+            var tbody = document.getElementById(tbodyId);
+            if (!areaList || areaList.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" class="empty-row">No areas found</td></tr>';
+                return;
+            }
+            var html = '';
+            areaList.forEach(function (area, idx) {
+                var name = area.gridName || area.name || area;
+                var s = stats[name] || { total: 0, areaPut: 0, trolleyPut: 0, gridDone: 0, trolleyId: '' };
+                var total = s.total || 0;
+                var safeName = escHtml(name).replace(/'/g, "\\'");
+
+                html += '<tr onclick="openGridDetail(\'' + safeName + '\')">';
+                html += '<td style="color:var(--muted);font-weight:600;">' + (idx + 1) + '</td>';
+                html += '<td class="grid-name">' + escHtml(name) + '</td>';
+                html += '<td class="count-cell">' + total + '</td>';
+                html += '<td>' + makeBadge(s.areaPut, total) + '</td>';
+                html += '<td>' + makeBadge(s.trolleyPut, total) + '</td>';
+                html += '<td>' + makeBadge(s.gridDone, total) + '</td>';
+                html += '<td class="trolley-cell ' + (s.trolleyId ? 'active' : 'none') + '">' + (s.trolleyId ? '🛒 ' + escHtml(s.trolleyId) : '—') + '</td>';
+                html += '</tr>';
+            });
+            tbody.innerHTML = html;
+        }
+
+        function makeBadge(count, total) {
+            var c = count || 0;
+            if (c === 0) return '<span class="badge badge-zero">0</span>';
+            if (c >= total && total > 0) return '<span class="badge badge-done">' + c + '/' + total + ' ✔</span>';
+            return '<span class="badge badge-pending">' + c + '/' + total + '</span>';
+        }
+
+        function openGridDetail(gridName) {
+            document.getElementById('modalGridName').textContent = gridName;
+            document.getElementById('modalBagCount').textContent = '…';
+            document.getElementById('modalBody').innerHTML = '<div class="modal-loading"><div class="modal-spinner"></div> Loading…</div>';
+            ['ms-total', 'ms-area', 'ms-trolley', 'ms-grid'].forEach(function (id) { document.getElementById(id).textContent = '…'; });
+            document.getElementById('modalOverlay').classList.add('open');
+            document.getElementById('modalPanel').classList.add('open');
+
+            fetch('/api/grid-detail?grid=' + encodeURIComponent(gridName))
+                .then(function (r) { return r.json(); })
+                .then(function (data) { renderModalDetail(data); })
+                .catch(function (e) { document.getElementById('modalBody').innerHTML = '<div class="empty-state"><div class="emoji">⚠️</div>' + escHtml(e.message) + '</div>'; });
+        }
+
+        function renderModalDetail(data) {
+            var bags = data.bags || [];
+            var total = bags.length, areaDone = 0, trolleyDone = 0, gridDone = 0;
+            bags.forEach(function (b) {
+                if (b.areaPut === 'Done') areaDone++;
+                if (b.trolleyPut === 'Done') trolleyDone++;
+                if (b.gridPut === 'Done') gridDone++;
+            });
+            document.getElementById('modalBagCount').textContent = total + ' bag' + (total !== 1 ? 's' : '');
+            document.getElementById('ms-total').textContent = total;
+            document.getElementById('ms-area').textContent = areaDone;
+            document.getElementById('ms-trolley').textContent = trolleyDone;
+            document.getElementById('ms-grid').textContent = gridDone;
+
+            if (bags.length === 0) {
+                document.getElementById('modalBody').innerHTML = '<div class="empty-state"><div class="emoji">📭</div>No bags found in this grid.</div>';
+                return;
+            }
+
+            var html = '<table class="detail-table"><thead><tr><th>#</th><th>Bag ID</th><th>Casper</th><th>Conveyer</th><th>Trolley</th><th>Area Put</th><th>Trolley Put</th><th>Grid Put</th><th>HMS</th></tr></thead><tbody>';
+            bags.forEach(function (b, idx) {
+                html += '<tr>';
+                html += '<td style="color:var(--muted)">' + (idx + 1) + '</td>';
+                html += '<td class="bag-id-cell" title="' + escAttr(b.bagId) + '">' + escHtml(b.bagId) + '</td>';
+                html += '<td>' + escHtml(b.casperId) + '</td>';
+                html += '<td>' + (b.conveyerId ? escHtml(b.conveyerId) : '<span style="color:var(--muted)">—</span>') + '</td>';
+                html += '<td>' + (b.trolleyId ? escHtml(b.trolleyId) : '<span style="color:var(--muted)">—</span>') + '</td>';
+                html += '<td>' + statusBadge(b.areaPut) + tsLine(b.areaPutTs) + '</td>';
+                html += '<td>' + statusBadge(b.trolleyPut) + tsLine(b.trolleyPutTs) + '</td>';
+                html += '<td>' + statusBadge(b.gridPut) + tsLine(b.gridPutTs) + '</td>';
+                html += '<td>' + hmsBadge(b.hmsSynced) + tsLine(b.hmsSyncedTs) + '</td>';
+                html += '</tr>';
+            });
+            html += '</tbody></table>';
+            document.getElementById('modalBody').innerHTML = html;
+        }
+
+        function statusBadge(v) { return v === 'Done' ? '<span class="status-badge done">✔ Done</span>' : '<span class="status-badge pending">—</span>'; }
+        function hmsBadge(v) {
+            if (v === 'Done') return '<span class="status-badge synced">⚡ Synced</span>';
+            if (v === 'Already_Staged') return '<span class="status-badge synced" style="background:#fff3bf;color:#7a4f01;">⚠️ Already Staged</span>';
+            return '<span class="status-badge pending">—</span>';
+        }
+        function tsLine(t) { return t ? '<div class="ts-cell">' + escHtml(t) + '</div>' : ''; }
+        function closeModal() {
+            document.getElementById('modalOverlay').classList.remove('open');
+            document.getElementById('modalPanel').classList.remove('open');
+            document.getElementById('modalSearchInput').value = '';
+            document.getElementById('modalSearchResult').textContent = '';
+        }
+        document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeModal(); });
+        function escHtml(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+        function escAttr(s) { return String(s).replace(/"/g, '&quot;').replace(/'/g, '&#39;'); }
+
+        /* ── Search / Scan in Modal ─────────────────── */
+        (function() {
+            var searchInput = document.getElementById('modalSearchInput');
+            var searchResult = document.getElementById('modalSearchResult');
+            var debounceTimer = null;
+
+            searchInput.addEventListener('input', function() {
+                clearTimeout(debounceTimer);
+                debounceTimer = setTimeout(doSearch, 200);
+            });
+
+            searchInput.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') {
+                    clearTimeout(debounceTimer);
+                    doSearch();
+                }
+            });
+
+            function doSearch() {
+                var query = searchInput.value.trim().toUpperCase();
+                var rows = document.querySelectorAll('#modalBody .detail-table tbody tr');
+                rows.forEach(function(r) { r.classList.remove('highlight-row'); });
+                searchResult.textContent = '';
+                searchResult.className = 'modal-search-result';
+
+                if (!query) return;
+
+                var found = 0;
+                var firstMatch = null;
+                rows.forEach(function(row) {
+                    var bagCell = row.querySelector('.bag-id-cell');
+                    if (bagCell) {
+                        var bagText = bagCell.textContent.trim().toUpperCase();
+                        if (bagText.indexOf(query) !== -1) {
+                            row.classList.add('highlight-row');
+                            found++;
+                            if (!firstMatch) firstMatch = row;
+                        }
+                    }
+                });
+
+                if (found > 0) {
+                    searchResult.textContent = found + ' match' + (found > 1 ? 'es' : '');
+                    searchResult.className = 'modal-search-result found';
+                    firstMatch.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                } else {
+                    searchResult.textContent = 'Not found';
+                    searchResult.className = 'modal-search-result not-found';
+                }
+            }
+        })();
+
+        function openFilteredDetail(filterType, title) {
+            document.getElementById('modalGridName').textContent = title;
+            document.getElementById('modalBagCount').textContent = '…';
+            document.getElementById('modalBody').innerHTML = '<div class="modal-loading"><div class="modal-spinner"></div> Loading…</div>';
+            ['ms-total', 'ms-area', 'ms-trolley', 'ms-grid'].forEach(function (id) { document.getElementById(id).textContent = '…'; });
+            document.getElementById('modalSearchInput').value = '';
+            document.getElementById('modalSearchResult').textContent = '';
+            document.getElementById('modalOverlay').classList.add('open');
+            document.getElementById('modalPanel').classList.add('open');
+
+            fetch('/api/filtered-bags?filter=' + encodeURIComponent(filterType))
+                .then(function (r) { return r.json(); })
+                .then(function (data) { renderFilteredDetail(data); })
+                .catch(function (e) { document.getElementById('modalBody').innerHTML = '<div class="empty-state"><div class="emoji">⚠️</div>' + escHtml(e.message) + '</div>'; });
+        }
+
+        function renderFilteredDetail(data) {
+            var bags = data.bags || [];
+            var total = bags.length, areaDone = 0, trolleyDone = 0, gridDone = 0;
+            bags.forEach(function (b) {
+                if (b.areaPut === 'Done') areaDone++;
+                if (b.trolleyPut === 'Done') trolleyDone++;
+                if (b.gridPut === 'Done') gridDone++;
+            });
+            document.getElementById('modalBagCount').textContent = total + ' bag' + (total !== 1 ? 's' : '');
+            document.getElementById('ms-total').textContent = total;
+            document.getElementById('ms-area').textContent = areaDone;
+            document.getElementById('ms-trolley').textContent = trolleyDone;
+            document.getElementById('ms-grid').textContent = gridDone;
+
+            if (bags.length === 0) {
+                document.getElementById('modalBody').innerHTML = '<div class="empty-state"><div class="emoji">📭</div>No bags found for this filter.</div>';
+                return;
+            }
+
+            var html = '<table class="detail-table"><thead><tr><th>#</th><th>Bag ID</th><th>Grid</th><th>Conveyer</th><th>Trolley</th><th>Area Put</th><th>Trolley Put</th><th>Grid Put</th><th>HMS</th></tr></thead><tbody>';
+            bags.forEach(function (b, idx) {
+                html += '<tr>';
+                html += '<td style="color:var(--muted)">' + (idx + 1) + '</td>';
+                html += '<td class="bag-id-cell" title="' + escAttr(b.bagId) + '">' + escHtml(b.bagId) + '</td>';
+                html += '<td style="font-weight:700">' + escHtml(b.grid) + '</td>';
+                html += '<td>' + (b.conveyerId ? escHtml(b.conveyerId) : '<span style="color:var(--muted)">—</span>') + '</td>';
+                html += '<td>' + (b.trolleyId ? escHtml(b.trolleyId) : '<span style="color:var(--muted)">—</span>') + '</td>';
+                html += '<td>' + statusBadge(b.areaPut) + tsLine(b.areaPutTs) + '</td>';
+                html += '<td>' + statusBadge(b.trolleyPut) + tsLine(b.trolleyPutTs) + '</td>';
+                html += '<td>' + statusBadge(b.gridPut) + tsLine(b.gridPutTs) + '</td>';
+                html += '<td>' + hmsBadge(b.hmsSynced) + tsLine(b.hmsSyncedTs) + '</td>';
+                html += '</tr>';
+            });
+            html += '</tbody></table>';
+            document.getElementById('modalBody').innerHTML = html;
+        }
+
+        function openBeltDetail() {
+            document.getElementById('modalGridName').textContent = 'On Belt';
+            document.getElementById('modalBagCount').textContent = '…';
+            document.getElementById('modalBody').innerHTML = '<div class="modal-loading"><div class="modal-spinner"></div> Loading…</div>';
+            ['ms-total', 'ms-area', 'ms-trolley', 'ms-grid'].forEach(function (id) { document.getElementById(id).textContent = '…'; });
+            document.getElementById('modalOverlay').classList.add('open');
+            document.getElementById('modalPanel').classList.add('open');
+
+            fetch('/api/belt-detail')
+                .then(function (r) { return r.json(); })
+                .then(function (data) { renderBeltDetail(data); })
+                .catch(function (e) { document.getElementById('modalBody').innerHTML = '<div class="empty-state"><div class="emoji">⚠️</div>' + escHtml(e.message) + '</div>'; });
+        }
+
+        function renderBeltDetail(data) {
+            var bags = data.bags || [];
+            document.getElementById('modalBagCount').textContent = bags.length + ' bag' + (bags.length !== 1 ? 's' : '');
+            document.getElementById('ms-total').textContent = bags.length;
+            document.getElementById('ms-area').textContent = '—';
+            document.getElementById('ms-trolley').textContent = '—';
+            document.getElementById('ms-grid').textContent = '—';
+
+            if (bags.length === 0) {
+                document.getElementById('modalBody').innerHTML = '<div class="empty-state"><div class="emoji">✅</div>No bags currently on belt. All scanned!</div>';
+                return;
+            }
+
+            var html = '<table class="detail-table"><thead><tr><th>#</th><th>Bag ID</th><th>Conveyer</th><th>Put on Belt</th><th>Target Grid</th></tr></thead><tbody>';
+            bags.forEach(function (b, idx) {
+                html += '<tr>';
+                html += '<td style="color:var(--muted)">' + (idx + 1) + '</td>';
+                html += '<td class="bag-id-cell">' + escHtml(b.bagId) + '</td>';
+                html += '<td><span style="font-weight:700;color:var(--primary)">' + escHtml(b.conveyerId) + '</span></td>';
+                html += '<td class="ts-cell">' + escHtml(b.conveyerTs) + '</td>';
+                html += '<td style="font-weight:700">' + escHtml(b.grid) + '</td>';
+                html += '</tr>';
+            });
+            html += '</tbody></table>';
+            document.getElementById('modalBody').innerHTML = html;
+        }
+
+        fetchDashboard();
+        setInterval(fetchDashboard, REFRESH_INTERVAL);
+    </script>
+</body>
+
+</html>

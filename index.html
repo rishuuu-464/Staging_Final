@@ -1,0 +1,1713 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Worker Portal – Staging Hub</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        /* ── RESET & BASE ─────────────────────────────── */
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        :root {
+            --bg: #ffffff;
+            --surface: #f8f9fa;
+            --surface2: #f1f3f5;
+            --border: #425f7c;
+            --primary: #1971c2;
+            --primary2: #1864ab;
+            --success: #2b8a3e;
+            --warn: #e67700;
+            --error: #c92a2a;
+            --text: #212529;
+            --muted: #868e96;
+            --radius: 8px;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* ── NAVBAR ───────────────────────────────────── */
+        .navbar {
+            background: #ffffff;
+            border-bottom: 2px solid #dee2e6;
+            padding: 10px 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .hamburger {
+            font-size: 20px;
+            cursor: pointer;
+            color: #212529;
+            background: none;
+            border: none;
+            line-height: 1;
+        }
+
+        .nav-title {
+            font-size: 15px;
+            font-weight: 700;
+            color: #212529;
+            flex: 1;
+        }
+
+        .nav-user {
+            font-size: 12px;
+            color: #868e96;
+        }
+
+        .nav-badge {
+            background: var(--primary);
+            color: #fff;
+            font-size: 10px;
+            font-weight: 700;
+            padding: 3px 8px;
+            border-radius: 4px;
+            letter-spacing: 0.5px;
+        }
+
+        /* ── SIDEBAR ──────────────────────────────────── */
+        .overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.4);
+            z-index: 150;
+        }
+
+        .overlay.open {
+            display: block;
+        }
+
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: -100%;
+            width: 260px;
+            height: 100%;
+            background: #ffffff;
+            border-right: 2px solid #dee2e6;
+            z-index: 200;
+            transition: left .25s ease;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar.open {
+            left: 0;
+        }
+
+        .sidebar-header {
+            padding: 16px;
+            border-bottom: 2px solid #dee2e6;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .sidebar-header h3 {
+            font-size: 14px;
+            font-weight: 700;
+            color: #212529;
+        }
+
+        .sidebar-close {
+            background: none;
+            border: none;
+            color: #868e96;
+            font-size: 20px;
+            cursor: pointer;
+        }
+
+        .sidebar nav a {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 16px;
+            color: #212529;
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 500;
+            border-bottom: 1px solid #f1f3f5;
+        }
+
+        .sidebar nav a:hover {
+            background: #f8f9fa;
+        }
+
+        .sidebar nav a.active {
+            color: var(--primary);
+            background: #e7f5ff;
+            font-weight: 600;
+        }
+
+        .sidebar nav a .icon {
+            font-size: 16px;
+            width: 22px;
+            text-align: center;
+        }
+
+        .sidebar-footer {
+            margin-top: auto;
+            padding: 12px 16px;
+            border-top: 2px solid #dee2e6;
+        }
+
+        .logout-btn {
+            width: 100%;
+            padding: 8px;
+            background: #fff5f5;
+            color: var(--error);
+            border: 1px solid #ffc9c9;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .logout-btn:hover {
+            background: #ffe3e3;
+        }
+
+        /* ── CONTAINER ────────────────────────────────── */
+        .page {
+            display: none;
+            flex: 1;
+            padding: 16px 14px 32px;
+            max-width: 720px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        .page.active {
+            display: block;
+        }
+
+        /* ── LOGIN ────────────────────────────────────── */
+        #loginPage {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 24px;
+            background: #f8f9fa;
+        }
+
+        .login-card {
+            background: #ffffff;
+            border: 2px solid #dee2e6;
+            border-radius: 10px;
+            padding: 32px 28px;
+            width: 100%;
+            max-width: 360px;
+            text-align: center;
+        }
+
+        .login-logo {
+            font-size: 36px;
+            margin-bottom: 6px;
+        }
+
+        .login-card h2 {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 4px;
+            color: #212529;
+        }
+
+        .login-card p {
+            font-size: 13px;
+            color: #868e96;
+            margin-bottom: 24px;
+        }
+
+        .login-input {
+            width: 100%;
+            padding: 11px 12px;
+            background: #ffffff;
+            border: 1.5px solid #ced4da;
+            border-radius: 6px;
+            color: #212529;
+            font-size: 14px;
+            font-family: 'Inter', sans-serif;
+            margin-bottom: 10px;
+            outline: none;
+        }
+
+        .login-input::placeholder {
+            color: #adb5bd;
+        }
+
+        .login-input:focus {
+            border-color: var(--primary);
+        }
+
+        .login-btn {
+            width: 100%;
+            padding: 11px;
+            background: var(--primary);
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            margin-top: 4px;
+        }
+
+        .login-btn:hover {
+            background: var(--primary2);
+        }
+
+        /* ── SECTION HEADER ───────────────────────────── */
+        .section-header {
+            margin-bottom: 16px;
+        }
+
+        .section-header h2 {
+            font-size: 18px;
+            font-weight: 700;
+            color: #212529;
+        }
+
+        .section-header p {
+            font-size: 12px;
+            color: #868e96;
+            margin-top: 2px;
+        }
+
+        /* ── SCAN ROW (horizontal layout) ────────────── */
+        .scan-row {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .scan-col {
+            flex: 1;
+            min-width: 0;
+        }
+
+        /* ── SCAN CARD ────────────────────────────────── */
+        .scan-card {
+            background: #ffffff;
+            border: 1.5px solid #dee2e6;
+            border-radius: var(--radius);
+            padding: 14px;
+            margin-bottom: 10px;
+        }
+
+        .scan-card.state-success {
+            background: #ebfbee;
+            border-color: var(--success);
+        }
+
+        .scan-card.state-error {
+            background: #fff5f5;
+            border-color: var(--error);
+        }
+
+        .scan-card.state-warn {
+            background: #fff9db;
+            border-color: var(--warn);
+        }
+
+        .scan-card.state-waiting {
+            opacity: .4;
+            pointer-events: none;
+        }
+
+        .step-label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .step-num {
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            background: #f1f3f5;
+            border: 1.5px solid #ced4da;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            font-weight: 700;
+            color: #868e96;
+            flex-shrink: 0;
+        }
+
+        .scan-card.state-success .step-num {
+            background: var(--success);
+            border-color: var(--success);
+            color: #fff;
+        }
+
+        .scan-card.state-error .step-num {
+            background: var(--error);
+            border-color: var(--error);
+            color: #fff;
+        }
+
+        .scan-card.state-warn .step-num {
+            background: var(--warn);
+            border-color: var(--warn);
+            color: #fff;
+        }
+
+        .step-title {
+            font-size: 12px;
+            font-weight: 600;
+            color: #495057;
+            text-transform: uppercase;
+            letter-spacing: .4px;
+        }
+
+        .scan-input {
+            width: 100%;
+            padding: 10px 12px;
+            background: #ffffff;
+            border: 1.5px solid #ced4da;
+            border-radius: 6px;
+            color: #212529;
+            font-size: 15px;
+            font-family: 'Inter', sans-serif;
+            outline: none;
+        }
+
+        .scan-input:focus {
+            border-color: var(--primary);
+            border-width: 2px;
+        }
+
+        .scan-input::placeholder {
+            color: #adb5bd;
+            font-size: 13px;
+        }
+
+        .scan-input:disabled {
+            opacity: .4;
+            background: #f8f9fa;
+        }
+
+        .status-msg {
+            margin-top: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            min-height: 18px;
+            line-height: 1.3;
+        }
+
+        .status-msg.success {
+            color: var(--success);
+        }
+
+        .status-msg.error {
+            color: var(--error);
+        }
+
+        .status-msg.warn {
+            color: var(--warn);
+        }
+
+        .status-msg.info {
+            color: var(--primary);
+        }
+
+        /* ── CONFIRMATION BOX ────────────────────────── */
+        .confirm-box {
+            display: none;
+            border: 2px solid var(--primary);
+            background: #e7f5ff;
+            border-radius: 6px;
+            padding: 12px 14px;
+            margin-top: 8px;
+            text-align: center;
+        }
+
+        .confirm-box.visible {
+            display: block;
+        }
+
+        .confirm-box.success-box {
+            border-color: var(--success);
+            background: #ebfbee;
+        }
+
+        .confirm-box.error-box {
+            border-color: var(--error);
+            background: #fff5f5;
+        }
+
+        .confirm-box .confirm-label {
+            font-size: 11px;
+            font-weight: 700;
+            color: #868e96;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 4px;
+        }
+
+        .confirm-box .confirm-value {
+            font-size: 22px;
+            font-weight: 800;
+            color: #212529;
+            line-height: 1.1;
+        }
+
+        .confirm-box .confirm-sub {
+            font-size: 12px;
+            color: #495057;
+            margin-top: 4px;
+        }
+
+        /* Spinner */
+        .spinner {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border: 2px solid #dee2e6;
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin .6s linear infinite;
+            vertical-align: middle;
+            margin-right: 4px;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* Reset btn */
+        .reset-btn {
+            width: 100%;
+            padding: 10px;
+            background: #f8f9fa;
+            border: 1.5px solid #dee2e6;
+            border-radius: 6px;
+            color: #495057;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 4px;
+        }
+
+        .reset-btn:hover {
+            background: #e9ecef;
+            color: #212529;
+        }
+
+        /* ── TROLLEY LOCK BADGE ──────────────────────── */
+        .trolley-badge {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: #f8f9fa;
+            border: 1.5px solid #dee2e6;
+            border-radius: 6px;
+            padding: 10px 12px;
+            margin-bottom: 12px;
+            font-size: 13px;
+        }
+
+        .trolley-badge.locked {
+            background: #e7f5ff;
+            border-color: var(--primary);
+        }
+
+        .trolley-badge .icon {
+            font-size: 18px;
+        }
+
+        .trolley-badge .label {
+            color: #868e96;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: .5px;
+        }
+
+        .trolley-badge .value {
+            font-weight: 700;
+            font-size: 14px;
+            color: #212529;
+        }
+
+        .grid-result {
+            text-align: center;
+            padding: 16px;
+            border-radius: var(--radius);
+            margin-top: 12px;
+            display: none;
+        }
+
+        .grid-result.visible {
+            display: block;
+        }
+
+        .grid-result.success {
+            background: #ebfbee;
+            border: 2px solid var(--success);
+        }
+
+        .grid-result.error {
+            background: #fff5f5;
+            border: 2px solid var(--error);
+        }
+
+        .grid-result .count {
+            font-size: 36px;
+            font-weight: 800;
+            color: var(--success);
+        }
+
+        .grid-result .label {
+            font-size: 13px;
+            color: var(--muted);
+            margin-top: 2px;
+        }
+
+        .grid-result .msg {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--error);
+        }
+
+        /* ── HIDDEN ───────────────────────────────────── */
+        .hidden {
+            display: none !important;
+        }
+
+        /* ── RESPONSIVE ── */
+        @media (max-width: 420px) {
+            .scan-row {
+                flex-direction: column;
+                gap: 0;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- LOGIN -->
+    <div id="loginPage">
+        <div class="login-card">
+            <div class="login-logo">📦</div>
+            <h2>Staging Hub</h2>
+            <p>Worker Portal — Sign in to continue</p>
+            <input class="login-input" type="text" id="casperId" placeholder="Casper ID" autocomplete="off">
+            <input class="login-input" type="password" id="casperPass" placeholder="Password">
+            <button class="login-btn" onclick="login()">Sign In →</button>
+            <div id="loginErr" style="color:var(--error);font-size:12px;margin-top:8px;"></div>
+        </div>
+    </div>
+
+    <!-- NAVBAR (hidden until login) -->
+    <div class="navbar hidden" id="navbar">
+        <button class="hamburger" onclick="openSidebar()">☰</button>
+        <span class="nav-title" id="navTitle">Sortation</span>
+        <span class="nav-user" id="navUser"></span>
+        <span class="nav-badge" id="navBadge">LIVE</span>
+    </div>
+
+    <!-- SIDEBAR OVERLAY -->
+    <div class="overlay" id="overlay" onclick="closeSidebar()"></div>
+
+    <!-- SIDEBAR -->
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <h3>📦 Staging Hub</h3>
+            <button class="sidebar-close" onclick="closeSidebar()">✕</button>
+        </div>
+        <nav>
+            <a href="#" onclick="switchPage('conveyerPage'); return false;" id="nav-conveyer" class="active">
+                <span class="icon">🏭</span> Conveyer Scan
+            </a>
+            <a href="#" onclick="switchPage('sortPage'); return false;" id="nav-sort">
+                <span class="icon">🔄</span> Bag Scan (Spiral)
+            </a>
+            <a href="#" onclick="switchPage('trolleyPage'); return false;" id="nav-trolley">
+                <span class="icon">🛒</span> Trolley Scan
+            </a>
+            <a href="#" onclick="switchPage('gridPage'); return false;" id="nav-grid">
+                <span class="icon">📍</span> Grid Put
+            </a>
+        </nav>
+        <div class="sidebar-footer">
+            <button class="logout-btn" onclick="logout()">⏻ Sign Out</button>
+        </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════
+     CONVEYER SCAN PAGE  (unchanged)
+════════════════════════════════════════════════════ -->
+    <div class="page hidden" id="conveyerPage">
+        <div class="section-header">
+            <h2>Conveyer Scan</h2>
+            <p>Scan conveyer barcode once, then scan bags — tracks bag onto the belt</p>
+        </div>
+
+        <div class="scan-row">
+            <div class="scan-col">
+                <div class="scan-card" id="card-cnvBelt">
+                    <div class="step-label">
+                        <div class="step-num" id="num-cnvBelt">1</div>
+                        <div class="step-title">Scan Conveyer Barcode</div>
+                    </div>
+                    <input type="text" class="scan-input" id="cnvBeltInput" placeholder="Scan G1_BL1, G2_BL1, or CNV-1…"
+                        onkeydown="handleCnvBeltKey(event)" autocomplete="off" inputmode="none">
+                    <div class="status-msg" id="cnvBeltStatus"></div>
+                </div>
+            </div>
+            <div class="scan-col">
+                <div class="scan-card state-waiting" id="card-cnvBag">
+                    <div class="step-label">
+                        <div class="step-num" id="num-cnvBag">2</div>
+                        <div class="step-title">Scan Bag Barcode</div>
+                    </div>
+                    <input type="text" class="scan-input" id="cnvBagInput" placeholder="Scan bag barcode…"
+                        onkeydown="handleCnvBagKey(event)" autocomplete="off" inputmode="none" disabled>
+                    <div class="status-msg" id="cnvBagStatus"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="confirm-box" id="cnvConfirmBox">
+            <div class="confirm-label">✅ BAG ON BELT</div>
+            <div class="confirm-value" id="cnvConfirmDest">—</div>
+            <div class="confirm-sub" id="cnvConfirmSub"></div>
+        </div>
+
+        <button class="reset-btn" onclick="resetConveyerBelt()" style="margin-top:8px;">🔄 Change Conveyer</button>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════
+     BAG SCAN (SPIRAL) — Bag + AREA put  (REWORKED)
+════════════════════════════════════════════════════ -->
+    <div class="page hidden" id="sortPage">
+        <div class="section-header">
+            <h2>Bag Scan (Spiral)</h2>
+            <p>Scan bag → see suggestion → scan the area barcode to confirm Area Put</p>
+        </div>
+
+        <div class="scan-row">
+            <div class="scan-col">
+                <div class="scan-card" id="card-bag">
+                    <div class="step-label">
+                        <div class="step-num" id="num-bag">1</div>
+                        <div class="step-title">Scan Bag Barcode</div>
+                    </div>
+                    <input type="text" class="scan-input" id="bagInput" placeholder="Scan bag barcode…"
+                        onkeydown="handleBagKey(event)" autocomplete="off" inputmode="none">
+                    <div class="status-msg" id="bagStatus"></div>
+                </div>
+            </div>
+            <div class="scan-col">
+                <div class="scan-card state-waiting" id="card-area">
+                    <div class="step-label">
+                        <div class="step-num" id="num-area">2</div>
+                        <div class="step-title">Scan Area Barcode</div>
+                    </div>
+                    <input type="text" class="scan-input" id="areaInput" placeholder="Scan area barcode…"
+                        onkeydown="handleAreaKey(event)" autocomplete="off" inputmode="none" disabled>
+                    <div class="status-msg" id="areaStatus"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="confirm-box" id="bagConfirmBox">
+            <div class="confirm-label">PUT THIS BAG IN</div>
+            <div class="confirm-value" id="bagConfirmDest">—</div>
+            <div class="confirm-sub" id="bagConfirmSub"></div>
+        </div>
+
+        <button class="reset-btn" onclick="resetSortation()">↺ Reset / Next Bag</button>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════
+     TROLLEY SCAN PAGE  (NEW)
+════════════════════════════════════════════════════ -->
+    <div class="page hidden" id="trolleyPage">
+        <div class="section-header">
+            <h2>Trolley Scan</h2>
+            <p>Scan a bag → scan trolley (locks to grid) → keep scanning bags of the same grid</p>
+        </div>
+
+        <div class="trolley-badge" id="trolLockBadge" style="display:none;">
+            <span class="icon">🔒</span>
+            <div>
+                <div class="label">Locked trolley</div>
+                <div class="value" id="trolLockValue">—</div>
+            </div>
+        </div>
+
+        <div class="scan-row">
+            <div class="scan-col">
+                <div class="scan-card" id="card-trolBag">
+                    <div class="step-label">
+                        <div class="step-num" id="num-trolBag">1</div>
+                        <div class="step-title">Scan Bag Barcode</div>
+                    </div>
+                    <input type="text" class="scan-input" id="trolBagInput" placeholder="Scan bag barcode…"
+                        onkeydown="handleTrolBagKey(event)" autocomplete="off" inputmode="none">
+                    <div class="status-msg" id="trolBagStatus"></div>
+                </div>
+            </div>
+            <div class="scan-col">
+                <div class="scan-card state-waiting" id="card-trolTrl">
+                    <div class="step-label">
+                        <div class="step-num" id="num-trolTrl">2</div>
+                        <div class="step-title">Scan Trolley (first bag only)</div>
+                    </div>
+                    <input type="text" class="scan-input" id="trolTrlInput" placeholder="Scan TRL-XXXX…"
+                        onkeydown="handleTrolTrlKey(event)" autocomplete="off" inputmode="none" disabled>
+                    <div class="status-msg" id="trolTrlStatus"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="confirm-box" id="trolConfirmBox">
+            <div class="confirm-label">✅ TROLLEY PUT DONE</div>
+            <div class="confirm-value" id="trolConfirmDest">—</div>
+            <div class="confirm-sub" id="trolConfirmSub"></div>
+        </div>
+
+        <button class="reset-btn" onclick="resetTrolleyPage()" style="margin-top:8px;">🔄 Unlock / New Trolley</button>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════
+     GRID PUT PAGE  (unchanged)
+════════════════════════════════════════════════════ -->
+    <div class="page hidden" id="gridPage">
+        <div class="section-header">
+            <h2>Grid Put</h2>
+            <p>Scan trolley, then scan outbound grid barcode — all bags bulk-updated</p>
+        </div>
+
+        <div class="scan-row">
+            <div class="scan-col">
+                <div class="scan-card" id="card-gridTrolley">
+                    <div class="step-label">
+                        <div class="step-num" id="num-gridTrolley">1</div>
+                        <div class="step-title">Scan Trolley Barcode</div>
+                    </div>
+                    <input type="text" class="scan-input" id="gridTrolleyInput" placeholder="Scan TRL-XXXX…"
+                        onkeydown="handleGridTrolleyKey(event)" autocomplete="off" inputmode="none">
+                    <div class="status-msg" id="gridTrolleyStatus"></div>
+                </div>
+            </div>
+
+            <div class="scan-col">
+                <div class="scan-card state-waiting" id="card-grid">
+                    <div class="step-label">
+                        <div class="step-num" id="num-grid">2</div>
+                        <div class="step-title">Scan Outbound Grid Barcode</div>
+                    </div>
+                    <input type="text" class="scan-input" id="gridInput" placeholder="Scan grid barcode…"
+                        onkeydown="handleGridKey(event)" autocomplete="off" inputmode="none" disabled>
+                    <div class="status-msg" id="gridStatus"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid-result" id="gridResult">
+            <div class="count" id="gridCount">0</div>
+            <div class="label" id="gridLabel">bags moved to Grid</div>
+            <div class="msg" id="gridMsg"></div>
+        </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════
+     JAVASCRIPT
+════════════════════════════════════════════════════ -->
+    <script>
+        /* ── SESSION STATE ─────────────────────────────── */
+        var session = {
+            user: '',
+            lastBagId: '',
+            lastGrid: '',
+            activeConveyer: ''
+        };
+
+        /* ── BARCODE SANITIZER ─────────────────────────── */
+        function sanitizeBarcode(raw) {
+            if (!raw) return '';
+            var cleaned = raw.replace(/[\x00-\x1f\x7f-\x9f]/g, '');
+            cleaned = cleaned.replace(/[\u200B-\u200D\uFEFF\u00AD]/g, '');
+            return cleaned.trim();
+        }
+
+        /* ── HELPER: call Flask API ────────────────────── */
+        function callAPI(url, payload) {
+            return fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            }).then(function (r) { return r.json(); });
+        }
+
+        /* ── LOGIN / LOGOUT ────────────────────────────── */
+        function login() {
+            var id = document.getElementById('casperId').value.trim();
+            var pass = document.getElementById('casperPass').value.trim();
+            if (!id || !pass) {
+                document.getElementById('loginErr').textContent = 'Please enter Casper ID and Password.';
+                return;
+            }
+            session.user = id;
+            document.getElementById('loginPage').classList.add('hidden');
+            document.getElementById('navbar').classList.remove('hidden');
+            document.getElementById('navUser').textContent = id;
+            switchPage('conveyerPage');
+            setTimeout(function () { document.getElementById('cnvBeltInput').focus(); }, 200);
+        }
+
+        function logout() {
+            session = { user: '', lastBagId: '', lastGrid: '', activeConveyer: '' };
+            document.getElementById('loginPage').classList.remove('hidden');
+            document.getElementById('navbar').classList.add('hidden');
+            document.getElementById('casperId').value = '';
+            document.getElementById('casperPass').value = '';
+            document.getElementById('loginErr').textContent = '';
+            ['conveyerPage', 'sortPage', 'trolleyPage', 'gridPage'].forEach(function (p) {
+                document.getElementById(p).classList.remove('active');
+            });
+            closeSidebar();
+        }
+
+        /* ── SIDEBAR ────────────────────────────────────── */
+        function openSidebar() {
+            document.getElementById('sidebar').classList.add('open');
+            document.getElementById('overlay').classList.add('open');
+        }
+        function closeSidebar() {
+            document.getElementById('sidebar').classList.remove('open');
+            document.getElementById('overlay').classList.remove('open');
+        }
+
+        /* ── PAGE SWITCHING ─────────────────────────────── */
+        function switchPage(pageId) {
+            ['conveyerPage', 'sortPage', 'trolleyPage', 'gridPage'].forEach(function (id) {
+                document.getElementById(id).classList.remove('active');
+                document.getElementById(id).classList.add('hidden');
+            });
+            document.getElementById(pageId).classList.remove('hidden');
+            document.getElementById(pageId).classList.add('active');
+
+            var titles = {
+                conveyerPage: 'Conveyer Scan',
+                sortPage: 'Bag Scan (Spiral)',
+                trolleyPage: 'Trolley Scan',
+                gridPage: 'Grid Put'
+            };
+            document.getElementById('navTitle').textContent = titles[pageId] || 'Portal';
+
+            ['nav-conveyer', 'nav-sort', 'nav-trolley', 'nav-grid'].forEach(function (id) {
+                var el = document.getElementById(id);
+                if (el) el.classList.remove('active');
+            });
+            var map = {
+                conveyerPage: 'nav-conveyer',
+                sortPage: 'nav-sort',
+                trolleyPage: 'nav-trolley',
+                gridPage: 'nav-grid'
+            };
+            if (map[pageId]) document.getElementById(map[pageId]).classList.add('active');
+
+            if (pageId === 'conveyerPage') { resetConveyerPage(); }
+            if (pageId === 'sortPage') { resetSortation(); }
+            if (pageId === 'trolleyPage') { resetTrolleyPage(); }
+            if (pageId === 'gridPage') { resetGridPage(); }
+
+            closeSidebar();
+        }
+
+        /* ══════════════════════════════════════════════════
+           CONVEYER SCAN PAGE  (unchanged)
+        ══════════════════════════════════════════════════ */
+        var activeConveyerBarcode = '';
+
+        var _cnvBeltDebounce = null;
+
+        function _submitCnvBelt() {
+            var inputEl = document.getElementById('cnvBeltInput');
+            var val = sanitizeBarcode(inputEl.value);
+            if (!val) return;
+            var upper = val.toUpperCase();
+            if (!upper.startsWith('CNV-') && !upper.startsWith('G1_BL') && !upper.startsWith('G2_BL')) {
+                setCardState('cnvBelt', 'error');
+                setStatus('cnvBeltStatus', '\u274c Wrong barcode! Must be a Conveyer code (G1_BL, G2_BL, or CNV-). Scanned: ' + val, 'error');
+                inputEl.value = '';
+                inputEl.focus();
+                return;
+            }
+            setCardState('cnvBelt', 'success');
+            activeConveyerBarcode = val;
+            document.getElementById('num-cnvBelt').textContent = '\u2713';
+            setStatus('cnvBeltStatus', '\u2705 Conveyer: ' + val, 'success');
+            document.getElementById('card-cnvBag').classList.remove('state-waiting');
+            document.getElementById('cnvBagInput').disabled = false;
+            document.getElementById('cnvBagInput').value = '';
+            document.getElementById('cnvBagInput').focus();
+        }
+
+        function handleCnvBeltKey(e) {
+            if (e.key !== 'Enter') return;
+            if (_cnvBeltDebounce) { clearTimeout(_cnvBeltDebounce); _cnvBeltDebounce = null; }
+            _submitCnvBelt();
+        }
+
+        (function() {
+            var inp = document.getElementById('cnvBeltInput');
+            if (!inp) return;
+            inp.addEventListener('input', function() {
+                if (_cnvBeltDebounce) clearTimeout(_cnvBeltDebounce);
+                var currentVal = inp.value.trim();
+                if (!currentVal || currentVal.length < 4) return;
+                _cnvBeltDebounce = setTimeout(function() {
+                    _cnvBeltDebounce = null;
+                    _submitCnvBelt();
+                }, 300);
+            });
+        })();
+
+        var _cnvBagDebounce = null;
+
+        function handleCnvBagKey(e) {
+            if (e.key !== 'Enter') return;
+            if (_cnvBagDebounce) { clearTimeout(_cnvBagDebounce); _cnvBagDebounce = null; }
+            _submitCnvBag();
+        }
+
+        (function() {
+            var inp = document.getElementById('cnvBagInput');
+            if (!inp) return;
+            inp.addEventListener('input', function() {
+                if (_cnvBagDebounce) clearTimeout(_cnvBagDebounce);
+                var currentVal = inp.value.trim();
+                if (!currentVal || currentVal.length < 4) return;
+                _cnvBagDebounce = setTimeout(function() {
+                    _cnvBagDebounce = null;
+                    _submitCnvBag();
+                }, 300);
+            });
+        })();
+
+        function _submitCnvBag() {
+            var inputEl = document.getElementById('cnvBagInput');
+            var val = sanitizeBarcode(inputEl.value);
+            if (!val) return;
+
+            inputEl.value = '';
+            inputEl.focus();
+
+            setStatus('cnvBagStatus', '\u2705 ' + val + ' \u2192 ' + activeConveyerBarcode, 'success');
+
+            callAPI('/api/conveyer-scan', {
+                Casper_ID: session.user,
+                conveyer_barcode: activeConveyerBarcode,
+                bag_id: val
+            })
+                .then(function (res) { onConveyerResult(res, val); })
+                .catch(function (err) {
+                    setStatus('cnvBagStatus', '\u274c ' + val + ': ' + err.message, 'error');
+                });
+        }
+
+        function onConveyerResult(res, scannedBagId) {
+            var ms = (typeof res.elapsed_ms === 'number') ? ' (' + res.elapsed_ms + 'ms)' : '';
+            if (res.action === 'CONVEYER_LOGGED') {
+                document.getElementById('cnvConfirmDest').textContent = res.bagId || scannedBagId || res.conveyerId;
+                document.getElementById('cnvConfirmSub').textContent = 'on ' + res.conveyerId + ms;
+                document.getElementById('cnvConfirmBox').classList.add('visible');
+                setStatus('cnvBagStatus', '\u2705 ' + (res.bagId || scannedBagId) + ' on ' + res.conveyerId + ms, 'success');
+                setTimeout(function () {
+                    document.getElementById('cnvConfirmBox').classList.remove('visible');
+                }, 1200);
+            } else if (res.action === 'ALREADY_STAGED') {
+                setStatus('cnvBagStatus', '\u26a0\ufe0f ' + (scannedBagId || '') + ' already staged (logged anyway)' + ms, 'warn');
+            } else {
+                setStatus('cnvBagStatus', '\u274c ' + (scannedBagId || '') + ': ' + (res.message || 'Unknown error'), 'error');
+            }
+        }
+
+        function resetConveyerPage() {
+            activeConveyerBarcode = '';
+            document.getElementById('cnvBeltInput').value = '';
+            document.getElementById('cnvBagInput').value = '';
+            document.getElementById('cnvBagInput').disabled = true;
+            document.getElementById('card-cnvBag').classList.add('state-waiting');
+            document.getElementById('num-cnvBelt').textContent = '1';
+            document.getElementById('num-cnvBag').textContent = '2';
+            setStatus('cnvBeltStatus', '', '');
+            setStatus('cnvBagStatus', '', '');
+            document.getElementById('cnvConfirmBox').classList.remove('visible');
+            document.getElementById('cnvBeltInput').focus();
+        }
+
+        function resetConveyerBelt() {
+            resetConveyerPage();
+        }
+
+        /* ══════════════════════════════════════════════════
+           BAG SCAN (SPIRAL) + AREA PUT  (REWORKED)
+           Step 1: scan bag → get grid suggestion
+           Step 2: scan area barcode → validate matches grid → Area_Put done
+        ══════════════════════════════════════════════════ */
+        var _bagDebounce = null;
+
+        function handleBagKey(e) {
+            if (e.key !== 'Enter') return;
+            if (_bagDebounce) { clearTimeout(_bagDebounce); _bagDebounce = null; }
+            _submitBagScan();
+        }
+
+        (function() {
+            var inp = document.getElementById('bagInput');
+            if (!inp) return;
+            inp.addEventListener('input', function() {
+                if (_bagDebounce) clearTimeout(_bagDebounce);
+                var currentVal = inp.value.trim();
+                if (!currentVal || currentVal.length < 4) return;
+                _bagDebounce = setTimeout(function() {
+                    _bagDebounce = null;
+                    _submitBagScan();
+                }, 300);
+            });
+        })();
+
+        function _submitBagScan() {
+            var inputEl = document.getElementById('bagInput');
+            var barcode = sanitizeBarcode(inputEl.value);
+            if (!barcode) return;
+
+            inputEl.value = '';
+            inputEl.focus();
+
+            setCardState('bag', 'loading');
+            setStatus('bagStatus', '<span class="spinner"></span> Looking up ' + barcode + '\u2026', 'info');
+
+            callAPI('/api/process-scan', {
+                Casper_ID: session.user,
+                barcode: barcode,
+                lastBagId: '',
+                lastGrid: ''
+            })
+                .then(onBagResult)
+                .catch(function (err) {
+                    setCardState('bag', 'error');
+                    setStatus('bagStatus', '\u274c Network error: ' + err.message, 'error');
+                });
+        }
+
+        function onBagResult(res) {
+            if (res.action === 'SUGGESTION' || res.action === 'ALREADY_STAGED') {
+                session.lastBagId = res.bagId;
+                session.lastGrid = res.grid;
+
+                var isAlreadyStaged = (res.action === 'ALREADY_STAGED') || res.alreadyStaged === true;
+                var ms = (typeof res.elapsed_ms === 'number') ? res.elapsed_ms + 'ms' : '';
+                var srcTag = res.gridSource ? (' [' + res.gridSource + ']') : '';
+
+                document.getElementById('bagConfirmDest').textContent = res.grid || '';
+                var subMsg = '';
+                if (res.cacheHit) {
+                    subMsg = '\u26a1 pre-fetched';
+                }
+                if (ms) {
+                    subMsg = (subMsg ? subMsg + ' | ' : '') + ms + srcTag;
+                }
+                if (isAlreadyStaged) {
+                    subMsg = '\u26a0\ufe0f ALREADY STAGED — continue area put for re-verification' +
+                             (subMsg ? ' | ' + subMsg : '');
+                }
+                document.getElementById('bagConfirmSub').textContent = subMsg;
+
+                var box = document.getElementById('bagConfirmBox');
+                box.classList.add('visible');
+                if (isAlreadyStaged) {
+                    box.classList.add('error-box');
+                } else {
+                    box.classList.remove('error-box');
+                }
+
+                setCardState('bag', isAlreadyStaged ? 'warn' : 'success');
+                setStatus('bagStatus',
+                    isAlreadyStaged
+                        ? '\u26a0\ufe0f Already staged — still scan area (re-verify) ' + ms
+                        : '\u2705 Bag scanned \u2014 now scan area ' + ms,
+                    isAlreadyStaged ? 'warn' : 'success');
+                document.getElementById('num-bag').textContent = isAlreadyStaged ? '!' : '\u2713';
+
+                // Enable area input (step 2)
+                document.getElementById('card-area').classList.remove('state-waiting');
+                document.getElementById('areaInput').disabled = false;
+                document.getElementById('areaInput').value = '';
+                document.getElementById('areaInput').focus();
+
+            } else {
+                setCardState('bag', 'error');
+                setStatus('bagStatus', res.message || '\u274c Unknown error', 'error');
+            }
+        }
+
+        /* Step 2: Area scan after bag scan */
+        var _areaDebounce = null;
+
+        function _submitAreaScan() {
+            var inputEl = document.getElementById('areaInput');
+            var val = sanitizeBarcode(inputEl.value);
+            if (!val) return;
+            if (!session.lastBagId) {
+                setStatus('areaStatus', '\u274c Scan a bag first', 'error');
+                return;
+            }
+
+            inputEl.value = '';
+
+            setStatus('areaStatus', '<span class="spinner"></span> Validating area\u2026', 'info');
+
+            callAPI('/api/process-scan', {
+                Casper_ID: session.user,
+                barcode: val,
+                lastBagId: session.lastBagId,
+                lastGrid: session.lastGrid
+            })
+                .then(onAreaResult)
+                .catch(function (err) {
+                    setStatus('areaStatus', '\u274c Network error: ' + err.message, 'error');
+                });
+        }
+
+        function handleAreaKey(e) {
+            if (e.key !== 'Enter') return;
+            if (_areaDebounce) { clearTimeout(_areaDebounce); _areaDebounce = null; }
+            _submitAreaScan();
+        }
+
+        (function() {
+            var inp = document.getElementById('areaInput');
+            if (!inp) return;
+            inp.addEventListener('input', function() {
+                if (_areaDebounce) clearTimeout(_areaDebounce);
+                var currentVal = inp.value.trim();
+                if (!currentVal || currentVal.length < 4) return;
+                _areaDebounce = setTimeout(function() {
+                    _areaDebounce = null;
+                    _submitAreaScan();
+                }, 300);
+            });
+        })();
+
+        function onAreaResult(res) {
+            var ms = (typeof res.elapsed_ms === 'number') ? ' (' + res.elapsed_ms + 'ms)' : '';
+            if (res.action === 'AREA_PUT_DONE') {
+                setCardState('area', 'success');
+                setStatus('areaStatus', '\u2705 Area Put Done' + ms, 'success');
+                document.getElementById('num-area').textContent = '\u2713';
+
+                // Auto-reset after 0.8s for fast continuous scanning
+                setTimeout(resetSortation, 800);
+
+            } else if (res.action === 'WRONG_AREA') {
+                setCardState('area', 'error');
+                setStatus('areaStatus',
+                    '\u274c Wrong area! Bag belongs to [' + res.correctGrid +
+                    ']. Scan the correct area barcode for ' + res.correctGrid + '.',
+                    'error');
+                // Keep input enabled — let worker retry
+                setTimeout(function () { document.getElementById('areaInput').focus(); }, 50);
+            } else {
+                setCardState('area', 'error');
+                setStatus('areaStatus', res.message || '\u274c Error', 'error');
+                setTimeout(function () { document.getElementById('areaInput').focus(); }, 50);
+            }
+        }
+
+        function resetSortation() {
+            session.lastBagId = '';
+            session.lastGrid = '';
+            setCardState('bag', '');
+            setCardState('area', '');
+            setStatus('bagStatus', '', '');
+            setStatus('areaStatus', '', '');
+            document.getElementById('bagInput').value = '';
+            document.getElementById('areaInput').value = '';
+            document.getElementById('areaInput').disabled = true;
+            document.getElementById('card-area').classList.add('state-waiting');
+            document.getElementById('num-bag').textContent = '1';
+            document.getElementById('num-area').textContent = '2';
+            var bagBox = document.getElementById('bagConfirmBox');
+            bagBox.classList.remove('visible');
+            bagBox.className = 'confirm-box';
+            setTimeout(function () { document.getElementById('bagInput').focus(); }, 50);
+        }
+
+        /* ══════════════════════════════════════════════════
+           TROLLEY SCAN PAGE  (NEW)
+           First bag: stash it, wait for trolley scan → locks trolley to grid
+           Subsequent bags: send straight to API with locked grid
+        ══════════════════════════════════════════════════ */
+        var trolPage = {
+            lockedGrid: '',
+            trolleyId: '',
+            pendingBagId: ''   // first bag awaiting trolley scan
+        };
+
+        var _trolBagDebounce = null;
+
+        function _submitTrolBagInput() {
+            var inputEl = document.getElementById('trolBagInput');
+            var val = sanitizeBarcode(inputEl.value);
+            if (!val) return;
+            inputEl.value = '';
+
+            if (!trolPage.trolleyId) {
+                // First bag — stash it, wait for trolley scan
+                trolPage.pendingBagId = val;
+                setCardState('trolBag', 'success');
+                setStatus('trolBagStatus', '\u2705 Bag staged: ' + val + ' \u2014 now scan trolley', 'success');
+                document.getElementById('num-trolBag').textContent = '\u2713';
+                document.getElementById('card-trolTrl').classList.remove('state-waiting');
+                document.getElementById('trolTrlInput').disabled = false;
+                document.getElementById('trolTrlInput').value = '';
+                setTimeout(function () { document.getElementById('trolTrlInput').focus(); }, 50);
+            } else {
+                // Subsequent bag — trolley already locked, send to API
+                _submitTrolBag(val);
+            }
+        }
+
+        function handleTrolBagKey(e) {
+            if (e.key !== 'Enter') return;
+            if (_trolBagDebounce) { clearTimeout(_trolBagDebounce); _trolBagDebounce = null; }
+            _submitTrolBagInput();
+        }
+
+        (function() {
+            var inp = document.getElementById('trolBagInput');
+            if (!inp) return;
+            inp.addEventListener('input', function() {
+                if (_trolBagDebounce) clearTimeout(_trolBagDebounce);
+                var currentVal = inp.value.trim();
+                if (!currentVal || currentVal.length < 4) return;
+                _trolBagDebounce = setTimeout(function() {
+                    _trolBagDebounce = null;
+                    _submitTrolBagInput();
+                }, 300);
+            });
+        })();
+
+        var _trolTrlDebounce = null;
+
+        function _submitTrolTrlInput() {
+            var inputEl = document.getElementById('trolTrlInput');
+            var val = sanitizeBarcode(inputEl.value);
+            if (!val) return;
+            var upper = val.toUpperCase();
+            if (!upper.startsWith('TRL-')) {
+                setCardState('trolTrl', 'error');
+                setStatus('trolTrlStatus', '\u274c Wrong barcode! Must be TRL-XXX. Scanned: ' + val, 'error');
+                inputEl.value = '';
+                return;
+            }
+            inputEl.value = '';
+            trolPage.trolleyId = val;
+            // Submit the pending first bag with the now-scanned trolley
+            _submitTrolBag(trolPage.pendingBagId);
+            trolPage.pendingBagId = '';
+        }
+
+        function handleTrolTrlKey(e) {
+            if (e.key !== 'Enter') return;
+            if (_trolTrlDebounce) { clearTimeout(_trolTrlDebounce); _trolTrlDebounce = null; }
+            _submitTrolTrlInput();
+        }
+
+        (function() {
+            var inp = document.getElementById('trolTrlInput');
+            if (!inp) return;
+            inp.addEventListener('input', function() {
+                if (_trolTrlDebounce) clearTimeout(_trolTrlDebounce);
+                var currentVal = inp.value.trim();
+                if (!currentVal || currentVal.length < 4) return;
+                _trolTrlDebounce = setTimeout(function() {
+                    _trolTrlDebounce = null;
+                    _submitTrolTrlInput();
+                }, 300);
+            });
+        })();
+
+        function _submitTrolBag(bagId) {
+            if (!bagId) {
+                setStatus('trolBagStatus', '\u274c No bag staged', 'error');
+                return;
+            }
+            setStatus('trolBagStatus', '<span class="spinner"></span> Processing\u2026', 'info');
+            callAPI('/api/trolley-scan', {
+                Casper_ID: session.user,
+                bagId: bagId,
+                trolleyId: trolPage.trolleyId,
+                lockedGrid: trolPage.lockedGrid
+            })
+                .then(onTrolScanResult)
+                .catch(function (err) {
+                    setStatus('trolBagStatus', '\u274c ' + err.message, 'error');
+                });
+        }
+
+        function onTrolScanResult(res) {
+            var ms = (typeof res.elapsed_ms === 'number') ? ' (' + res.elapsed_ms + 'ms)' : '';
+            if (res.action === 'TROLLEY_PUT_DONE') {
+                // First success → lock the trolley
+                if (!trolPage.lockedGrid) {
+                    trolPage.lockedGrid = res.lockedGrid || res.grid;
+                    var badge = document.getElementById('trolLockBadge');
+                    badge.style.display = 'flex';
+                    badge.classList.add('locked');
+                    document.getElementById('trolLockValue').textContent =
+                        res.trolleyId + ' \u2192 ' + trolPage.lockedGrid;
+                    // Disable the trolley input — it's locked now
+                    document.getElementById('card-trolTrl').classList.add('state-waiting');
+                    document.getElementById('trolTrlInput').disabled = true;
+                    document.getElementById('num-trolTrl').textContent = '\u2713';
+                }
+                setCardState('trolBag', 'success');
+                setStatus('trolBagStatus',
+                    '\u2705 ' + res.bagId + ' \u2192 [' + res.grid + ']' + ms +
+                    '. Scan next bag of [' + trolPage.lockedGrid + '].', 'success');
+
+                var box = document.getElementById('trolConfirmBox');
+                document.getElementById('trolConfirmDest').textContent = res.grid;
+                document.getElementById('trolConfirmSub').textContent = res.bagId + ms;
+                box.classList.add('visible');
+                setTimeout(function () { box.classList.remove('visible'); }, 1000);
+
+                // Refocus bag input for next scan
+                document.getElementById('trolBagInput').value = '';
+                document.getElementById('trolBagInput').focus();
+
+            } else if (res.action === 'WRONG_GRID') {
+                setCardState('trolBag', 'error');
+                setStatus('trolBagStatus',
+                    '\u274c Wrong bag! Trolley locked to [' + res.lockedGrid +
+                    '], but this bag belongs to [' + res.correctGrid +
+                    ']. Put it on a different trolley.', 'error');
+                document.getElementById('trolBagInput').value = '';
+                setTimeout(function () { document.getElementById('trolBagInput').focus(); }, 50);
+            } else {
+                setCardState('trolBag', 'error');
+                setStatus('trolBagStatus', res.message || '\u274c Error', 'error');
+                document.getElementById('trolBagInput').value = '';
+                setTimeout(function () { document.getElementById('trolBagInput').focus(); }, 50);
+            }
+        }
+
+        function resetTrolleyPage() {
+            trolPage = { lockedGrid: '', trolleyId: '', pendingBagId: '' };
+            document.getElementById('trolBagInput').value = '';
+            document.getElementById('trolTrlInput').value = '';
+            document.getElementById('trolTrlInput').disabled = true;
+            document.getElementById('card-trolTrl').classList.add('state-waiting');
+            document.getElementById('num-trolBag').textContent = '1';
+            document.getElementById('num-trolTrl').textContent = '2';
+            setCardState('trolBag', '');
+            setCardState('trolTrl', '');
+            setStatus('trolBagStatus', '', '');
+            setStatus('trolTrlStatus', '', '');
+            var badge = document.getElementById('trolLockBadge');
+            badge.style.display = 'none';
+            badge.classList.remove('locked');
+            document.getElementById('trolConfirmBox').classList.remove('visible');
+            setTimeout(function () { document.getElementById('trolBagInput').focus(); }, 50);
+        }
+
+        /* ══════════════════════════════════════════════════
+           GRID PUT PAGE  (unchanged)
+        ══════════════════════════════════════════════════ */
+        var gridPageTrolley = '';
+
+        var _gridTrolleyDebounce = null;
+
+        function _submitGridTrolley() {
+            var inputEl = document.getElementById('gridTrolleyInput');
+            var val = sanitizeBarcode(inputEl.value);
+            if (!val) return;
+
+            var upper = val.toUpperCase();
+            if (!upper.startsWith('TRL-')) {
+                setCardState('gridTrolley', 'error');
+                setStatus('gridTrolleyStatus', '\u274c Wrong barcode! Must be a Trolley code (TRL-XXX). Scanned: ' + val, 'error');
+                inputEl.value = '';
+                inputEl.focus();
+                return;
+            }
+
+            setCardState('gridTrolley', 'success');
+            gridPageTrolley = val;
+            document.getElementById('num-gridTrolley').textContent = '\u2713';
+            setStatus('gridTrolleyStatus', '\u2705 Trolley: ' + val + ' — looking up grid\u2026', 'success');
+
+            callAPI('/api/trolley-grid', { trolleyId: val })
+                .then(function(res) {
+                    if (res.grid) {
+                        setStatus('gridTrolleyStatus', '\u2705 Trolley: ' + val + ' \u2192 Grid: <strong>' + res.grid + '</strong>', 'success');
+                    } else {
+                        setStatus('gridTrolleyStatus', '\u2705 Trolley: ' + val + ' (no grid assigned yet)', 'success');
+                    }
+                })
+                .catch(function() {
+                    setStatus('gridTrolleyStatus', '\u2705 Trolley: ' + val, 'success');
+                });
+
+            document.getElementById('card-grid').classList.remove('state-waiting');
+            document.getElementById('gridInput').disabled = false;
+            document.getElementById('gridInput').value = '';
+            document.getElementById('gridInput').focus();
+        }
+
+        function handleGridTrolleyKey(e) {
+            if (e.key !== 'Enter') return;
+            if (_gridTrolleyDebounce) { clearTimeout(_gridTrolleyDebounce); _gridTrolleyDebounce = null; }
+            _submitGridTrolley();
+        }
+
+        (function() {
+            var inp = document.getElementById('gridTrolleyInput');
+            if (!inp) return;
+            inp.addEventListener('input', function() {
+                if (_gridTrolleyDebounce) clearTimeout(_gridTrolleyDebounce);
+                var currentVal = inp.value.trim();
+                if (!currentVal || currentVal.length < 4) return;
+                _gridTrolleyDebounce = setTimeout(function() {
+                    _gridTrolleyDebounce = null;
+                    _submitGridTrolley();
+                }, 300);
+            });
+        })();
+
+        var _gridDebounce = null;
+
+        function _submitGridScan() {
+            var inputEl = document.getElementById('gridInput');
+            var barcode = sanitizeBarcode(inputEl.value);
+            if (!barcode) return;
+
+            inputEl.value = '';
+            setStatus('gridStatus', '<span class="spinner"></span> Processing Grid Put\u2026', 'info');
+
+            callAPI('/api/grid-put', {
+                Casper_ID: session.user,
+                barcode: barcode,
+                trolleyId: gridPageTrolley
+            })
+                .then(onGridResult)
+                .catch(function (err) {
+                    setStatus('gridStatus', '\u274c Network error: ' + err.message, 'error');
+                });
+        }
+
+        function handleGridKey(e) {
+            if (e.key !== 'Enter') return;
+            if (_gridDebounce) { clearTimeout(_gridDebounce); _gridDebounce = null; }
+            _submitGridScan();
+        }
+
+        (function() {
+            var inp = document.getElementById('gridInput');
+            if (!inp) return;
+            inp.addEventListener('input', function() {
+                if (_gridDebounce) clearTimeout(_gridDebounce);
+                var currentVal = inp.value.trim();
+                if (!currentVal || currentVal.length < 4) return;
+                _gridDebounce = setTimeout(function() {
+                    _gridDebounce = null;
+                    _submitGridScan();
+                }, 300);
+            });
+        })();
+
+        function onGridResult(res) {
+            var resultEl = document.getElementById('gridResult');
+            resultEl.classList.remove('hidden');
+            var ms = (typeof res.elapsed_ms === 'number') ? ' (' + res.elapsed_ms + 'ms)' : '';
+
+            if (res.action === 'GRID_DONE') {
+                resultEl.className = 'grid-result success visible';
+                document.getElementById('gridCount').textContent = res.count;
+                document.getElementById('gridLabel').textContent = 'bag(s) from trolley [' + (res.trolleyId || '') + '] \u2192 Grid ' + (res.gridName || '') + ms;
+                var queuedMsg = '';
+                if (typeof res.queued === 'number' && res.queued > 0) {
+                    queuedMsg = '\ud83d\udd04 ' + res.queued + ' bag(s) queued for HMS sync';
+                }
+                document.getElementById('gridMsg').textContent = queuedMsg;
+                setStatus('gridStatus', '\u2705 Grid Put Done' + ms, 'success');
+
+                setTimeout(function () {
+                    resultEl.classList.remove('visible');
+                    resetGridPage();
+                }, 4000);
+
+            } else {
+                resultEl.className = 'grid-result error visible';
+                document.getElementById('gridCount').textContent = '';
+                document.getElementById('gridLabel').textContent = '';
+                document.getElementById('gridMsg').textContent = res.message || 'Error';
+                setStatus('gridStatus', res.message, 'error');
+                document.getElementById('gridInput').value = '';
+            }
+        }
+
+        function resetGridPage() {
+            gridPageTrolley = '';
+            document.getElementById('gridTrolleyInput').value = '';
+            document.getElementById('gridInput').value = '';
+            document.getElementById('gridInput').disabled = true;
+            document.getElementById('card-grid').classList.add('state-waiting');
+            document.getElementById('num-gridTrolley').textContent = '1';
+            document.getElementById('num-grid').textContent = '2';
+            setStatus('gridTrolleyStatus', '', '');
+            setStatus('gridStatus', '', '');
+            document.getElementById('gridTrolleyInput').focus();
+        }
+
+        /* ══════════════════════════════════════════════════
+           HELPERS
+        ══════════════════════════════════════════════════ */
+        function setStatus(elId, html, type) {
+            var el = document.getElementById(elId);
+            if (!el) return;
+            el.innerHTML = html;
+            el.className = 'status-msg ' + (type || '');
+        }
+
+        function setCardState(card, state) {
+            var el = document.getElementById('card-' + card);
+            if (!el) return;
+            el.className = 'scan-card';
+            if (state === 'success') el.classList.add('state-success');
+            if (state === 'error') el.classList.add('state-error');
+            if (state === 'warn') el.classList.add('state-warn');
+        }
+
+        /* ══════════════════════════════════════════════════
+           HHD SOFT-KEYBOARD SUPPRESSION  (triple-layer)
+           ─────────────────────────────────────────────────
+           Layer 1 – declarative:  inputmode="none" on every
+             input tells the browser/OS not to open a keyboard.
+             Works reliably on modern Android Chrome & most
+             Zebra/Honeywell WebView builds.
+
+           Layer 2 – pointer interception:  touchstart +
+             mousedown preventDefault stops the browser from
+             entering "touch-to-type" focus mode when the
+             worker accidentally taps the screen.  We then
+             call focus() ourselves so the element still
+             receives scanner keydown events.
+
+           Layer 3 – focusin readonly trick:  ANY programmatic
+             focus() call (from JS after a scan) can still
+             raise the keyboard on some HHD browsers even
+             with inputmode="none".  The only reliable fix is
+             to have the element be readonly at the exact
+             moment focus lands — the browser skips the IME
+             and keyboard entirely — then we remove readonly
+             one tick later so scanner input flows normally.
+             Physical barcode scanners are unaffected because
+             they fire keydown/input events directly and do
+             not interact with the keyboard stack at all.
+        ══════════════════════════════════════════════════ */
+        (function () {
+            /* All inputs that must NEVER raise the soft keyboard */
+            var SCAN_IDS = [
+                'cnvBeltInput', 'cnvBagInput',
+                'bagInput',     'areaInput',
+                'trolBagInput', 'trolTrlInput',
+                'gridTrolleyInput', 'gridInput'
+            ];
+
+            /* ── Layer 3: global focusin interceptor ── */
+            /* Runs before the browser decides to open the keyboard */
+            document.addEventListener('focusin', function (e) {
+                var el = e.target;
+                if (!el || SCAN_IDS.indexOf(el.id) === -1) return;
+
+                /* Set readonly synchronously — browser sees it
+                   before raising the IME/keyboard */
+                el.setAttribute('readonly', 'readonly');
+
+                /* Remove readonly on the next event-loop tick so
+                   scanner characters can still be injected */
+                setTimeout(function () {
+                    el.removeAttribute('readonly');
+                }, 0);
+            }, true /* capture phase — runs first */ );
+
+            /* ── Layer 2: pointer interception ── */
+            function suppressPointer(el) {
+                el.addEventListener('touchstart', function (e) {
+                    e.preventDefault();          /* no touch-keyboard */
+                    el.focus({ preventScroll: true });
+                }, { passive: false });
+
+                el.addEventListener('mousedown', function (e) {
+                    e.preventDefault();          /* no click-keyboard */
+                    el.focus({ preventScroll: true });
+                });
+            }
+
+            /* ── visibilitychange: re-focus silently on return ── */
+            document.addEventListener('visibilitychange', function () {
+                if (document.visibilityState !== 'visible') return;
+                var active = document.activeElement;
+                if (active && SCAN_IDS.indexOf(active.id) !== -1) {
+                    active.blur();
+                    setTimeout(function () {
+                        active.focus({ preventScroll: true });
+                    }, 100);
+                }
+            });
+
+            function init() {
+                SCAN_IDS.forEach(function (id) {
+                    var el = document.getElementById(id);
+                    if (el) suppressPointer(el);
+                });
+            }
+
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', init);
+            } else {
+                init();
+            }
+        })();
+
+    </script>
+
+</body>
+
+</html>
